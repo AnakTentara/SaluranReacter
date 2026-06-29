@@ -184,6 +184,11 @@ export class BotSession {
     if (this.io) {
       this.io.emit('accounts:statusUpdate', this.getStatusInfo());
     }
+    if (this.onStatusChange) {
+      try {
+        this.onStatusChange(status);
+      } catch {}
+    }
   }
 
   getStatusInfo() {

@@ -789,3 +789,151 @@ textarea.input {
   font-size: 14px;
   color: var(--text-muted);
 }
+
+/* ── RESPONSIVE MOBILE MEDIA QUERIES ────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  #app {
+    flex-direction: column;
+    overflow-y: auto;
+    height: auto;
+  }
+
+  body {
+    overflow-y: auto;
+    height: auto;
+  }
+
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .sidebar-header {
+    padding: 16px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .nav {
+    padding: 8px 12px;
+    flex-direction: row;
+    overflow-x: auto;
+    white-space: nowrap;
+    gap: 8px;
+    flex-grow: 0;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .nav::-webkit-scrollbar {
+    display: none; /* Hide scrollbar for clean top nav */
+  }
+
+  .nav-btn {
+    padding: 8px 14px;
+    font-size: 13px;
+    flex-shrink: 0;
+    justify-content: center;
+    border-radius: 20px;
+    background-color: rgba(255, 255, 255, 0.03);
+  }
+
+  .nav-btn.active {
+    border-left: none;
+    border-bottom: 2px solid var(--primary);
+    border-radius: 20px;
+    padding-left: 14px;
+    background-color: var(--bg-active);
+  }
+
+  .rate-limit-panel {
+    display: none; /* Hide rate limit panel on mobile sidebar to save space */
+  }
+
+  .main {
+    padding: 16px;
+    height: auto;
+    overflow-y: visible;
+  }
+
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .panel-header h1 {
+    font-size: 22px;
+  }
+
+  .panel-header .btn {
+    width: 100%;
+  }
+
+  .accounts-grid {
+    grid-template-columns: 1fr; /* Single column on mobile */
+    gap: 16px;
+  }
+
+  .account-card {
+    padding: 16px;
+  }
+
+  .card-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .card-actions .btn {
+    flex-grow: 1;
+  }
+
+  .channel-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .channel-actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .input-row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .input-unit {
+    margin-top: -4px;
+    text-align: right;
+  }
+
+  .input-sm {
+    width: 100%;
+  }
+
+  #debug-table-wrapper {
+    overflow-x: auto; /* Allow horizontal scrolling on debug table for mobile */
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .debug-table th, .debug-table td {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+}
+

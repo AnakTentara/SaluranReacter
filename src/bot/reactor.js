@@ -24,11 +24,26 @@ export class Reactor {
   queueReactions(postId, channelJid, messageKey, serverId, reactions) {
     logger.info({ postId, count: reactions.length }, 'Queueing reactions');
 
+    // Check Jakarta time for Silent Hours (23:00 - 06:00 WIB)
+    const jktHourStr = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Jakarta', hour12: false, hour: '2-digit' });
+    const hourInt = parseInt(jktHourStr, 10);
+    const isSilentHours = hourInt >= 23 || hourInt < 6;
+
+    if (isSilentHours) {
+      logger.info({ hour: hourInt }, '🛌 Silent Hours active (23:00-06:00 WIB) — multiplying all delays by 4');
+    }
+
     for (const reaction of reactions) {
       const { accountId, emoji, delaySeconds } = reaction;
+      
+      let finalDelaySeconds = delaySeconds;
+      if (isSilentHours) {
+        finalDelaySeconds = delaySeconds * 4;
+      }
+
       // Add small random jitter (0–15s) on top of AI delay for extra naturalness
       const jitter = Math.floor(Math.random() * 15);
-      const totalDelay = (delaySeconds + jitter) * 1000;
+      const totalDelay = (finalDelaySeconds + jitter) * 1000;
 
       const key = `${postId}:${accountId}`;
 
@@ -40,7 +55,7 @@ export class Reactor {
       this.pendingTimers.set(key, timer);
 
       logger.debug(
-        { accountId, emoji, delayMs: totalDelay },
+        { accountId, emoji, originalDelay: delaySeconds, finalDelayMs: totalDelay },
         'Reaction scheduled'
       );
     }

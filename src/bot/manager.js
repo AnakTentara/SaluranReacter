@@ -41,6 +41,11 @@ export class BotManager {
     }
 
     const session = new BotSession(account, this.io);
+    session.onStatusChange = (status) => {
+      logger.info({ accountId: account.id, status }, 'Session status changed — evaluating listener');
+      this.assignListener();
+    };
+
     this.sessions.set(account.id, session);
 
     await session.connect();

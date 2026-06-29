@@ -6,7 +6,7 @@ import logger from '../utils/logger.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = join(__dirname, '..', '..', 'data', 'media_cache');
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days (1 week)
 // Gemini inline_data limit ~20MB
 const MAX_MEDIA_BYTES = 18 * 1024 * 1024;
 

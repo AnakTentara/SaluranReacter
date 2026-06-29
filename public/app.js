@@ -751,13 +751,20 @@ function addDebugRow(msg) {
   const tr = document.createElement('tr');
   const time = new Date(msg.received_at * 1000 || Date.now()).toLocaleTimeString('id-ID', { hour12: false });
 
+  let serverId = '';
+  try {
+    const rawKey = JSON.parse(msg.raw || '{}');
+    serverId = rawKey.server_id || '';
+  } catch {}
+
   tr.innerHTML = `
     <td>${time}</td>
     <td style="font-family: var(--font-mono); font-size:12px;">${escapeHtml(msg.jid)}</td>
     <td><span class="status-badge online" style="font-size:10px;">${escapeHtml(msg.contentType.toUpperCase())}</span></td>
     <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;" title="${escapeHtml(msg.preview)}">${escapeHtml(msg.preview)}</td>
-    <td>
+    <td style="display: flex; gap: 4px;">
       <button class="btn btn-secondary btn-xs" onclick="useDebugJid('${escapeHtml(msg.jid)}')">Gunakan</button>
+      <button class="btn btn-primary btn-xs" onclick="useDebugForReact('${escapeHtml(msg.jid)}', '${escapeHtml(msg.messageId)}', '${escapeHtml(serverId)}')">Test React</button>
     </td>
   `;
   DOM.debugTbody.insertBefore(tr, DOM.debugTbody.firstChild);
@@ -767,6 +774,27 @@ window.useDebugJid = function (jid) {
   openAddChannelModal();
   document.getElementById('new-ch-id').value = jid;
   document.getElementById('new-ch-name').value = 'Saluran Acell';
+};
+
+window.useDebugForReact = function (jid, messageId, serverId) {
+  // Switch to debug tab if needed
+  switchTab('debug');
+
+  DOM.debugReactJid.value = jid;
+  DOM.debugReactMsgId.value = messageId;
+  DOM.debugReactServerId.value = serverId || '';
+
+  // Scroll to test panel and highlight it
+  const testPanel = document.querySelector('.settings-card[style*="rgba(245, 158, 11"]');
+  if (testPanel) {
+    testPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    testPanel.style.transform = 'scale(1.02)';
+    testPanel.style.borderColor = 'var(--primary)';
+    setTimeout(() => {
+      testPanel.style.transform = 'scale(1)';
+      testPanel.style.borderColor = 'rgba(245, 158, 11, 0.3)';
+    }, 500);
+  }
 };
 
 async function clearDebugLogs() {
