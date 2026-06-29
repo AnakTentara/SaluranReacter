@@ -161,13 +161,22 @@ export class BotSession {
   /**
    * Send a reaction emoji to a message.
    */
-  async sendReaction(jid, messageKey, emoji) {
+  async sendReaction(jid, messageKey, serverId, emoji) {
     if (this.status !== 'connected' || !this.sock) {
       throw new Error(`Account ${this.id} is not connected`);
     }
-    await this.sock.sendMessage(jid, {
-      react: { text: emoji, key: messageKey },
-    });
+
+    if (jid.endsWith('@newsletter')) {
+      const targetId = serverId || messageKey.id;
+      if (!targetId) throw new Error('Missing serverId or message key ID for newsletter reaction');
+      
+      logger.info({ accountId: this.id, jid, targetId, emoji }, 'Sending reaction to newsletter');
+      await this.sock.newsletterReactMessage(jid, targetId.toString(), emoji);
+    } else {
+      await this.sock.sendMessage(jid, {
+        react: { text: emoji, key: messageKey },
+      });
+    }
   }
 
   setStatus(status) {

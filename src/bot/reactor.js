@@ -18,9 +18,10 @@ export class Reactor {
    * @param {string} postId - Message ID of the channel post
    * @param {string} channelJid - Channel JID (e.g. "120363XXX@newsletter")
    * @param {object} messageKey - Baileys message key object
+   * @param {string|number} serverId - The newsletter serverId for reactions
    * @param {Array}  reactions - [{ accountId, emoji, delaySeconds }]
    */
-  queueReactions(postId, channelJid, messageKey, reactions) {
+  queueReactions(postId, channelJid, messageKey, serverId, reactions) {
     logger.info({ postId, count: reactions.length }, 'Queueing reactions');
 
     for (const reaction of reactions) {
@@ -33,7 +34,7 @@ export class Reactor {
 
       const timer = setTimeout(async () => {
         this.pendingTimers.delete(key);
-        await this.sendReaction({ postId, channelJid, messageKey, accountId, emoji });
+        await this.sendReaction({ postId, channelJid, messageKey, serverId, accountId, emoji });
       }, totalDelay);
 
       this.pendingTimers.set(key, timer);
@@ -48,7 +49,7 @@ export class Reactor {
   /**
    * Send a single reaction.
    */
-  async sendReaction({ postId, channelJid, messageKey, accountId, emoji }) {
+  async sendReaction({ postId, channelJid, messageKey, serverId, accountId, emoji }) {
     const session = this.botManager.getReactorSession(accountId);
 
     if (!session) {
@@ -58,7 +59,7 @@ export class Reactor {
     }
 
     try {
-      await session.sendReaction(channelJid, messageKey, emoji);
+      await session.sendReaction(channelJid, messageKey, serverId, emoji);
 
       logReaction({ postId, accountId, emoji, success: true });
       logger.info({ accountId, emoji, postId }, '✅ Reaction sent!');

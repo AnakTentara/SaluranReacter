@@ -204,7 +204,10 @@ async function processChannelPost(sock, msg, channel) {
   // Queue reactions
   if (reactor && aiResult.reactions?.length > 0) {
     const reacting = aiResult.reactions.filter((r) => r.shouldReact);
-    reactor.queueReactions(msgId, channel.id, msg.key, reacting);
+    const serverId = msg.newsletterServerId || msg.message?.newsletterServerId || null;
+    
+    logger.info({ msgId, serverId }, 'Passing serverId to reactor');
+    reactor.queueReactions(msgId, channel.id, msg.key, serverId, reacting);
     markPostReacted(msgId, reacting);
   }
 }
