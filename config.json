@@ -1,0 +1,7 @@
+{
+  "geminiApiKey": "",
+  "pollingIntervalSeconds": 120,
+  "debugMode": true,
+  "channels": [],
+  "accounts": []
+}

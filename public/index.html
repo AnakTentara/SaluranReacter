@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WA Reactor — Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div id="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <div class="logo">
+          <span class="logo-icon">🤖</span>
+          <span class="logo-text">WA Reactor</span>
+        </div>
+      </div>
+      <nav class="nav">
+        <button class="nav-btn active" data-tab="accounts" id="nav-accounts">
+          <span class="nav-icon">📱</span>
+          <span>Akun Bot</span>
+        </button>
+        <button class="nav-btn" data-tab="channels" id="nav-channels">
+          <span class="nav-icon">📡</span>
+          <span>Saluran</span>
+        </button>
+        <button class="nav-btn" data-tab="settings" id="nav-settings">
+          <span class="nav-icon">⚙️</span>
+          <span>Pengaturan</span>
+        </button>
+        <button class="nav-btn" data-tab="log" id="nav-log">
+          <span class="nav-icon">📋</span>
+          <span>Log Aktivitas</span>
+        </button>
+        <button class="nav-btn" data-tab="debug" id="nav-debug">
+          <span class="nav-icon">🐛</span>
+          <span>Debug Pesan</span>
+        </button>
+      </nav>
+      <!-- Rate Limit Status -->
+      <div class="rate-limit-panel">
+        <div class="rl-title">Gemini API Limit</div>
+        <div class="rl-item">
+          <div class="rl-label">RPM <span id="rl-rpm-val">0/13</span></div>
+          <div class="rl-bar"><div class="rl-fill" id="rl-rpm-bar"></div></div>
+        </div>
+        <div class="rl-item">
+          <div class="rl-label">RPD <span id="rl-rpd-val">0/498</span></div>
+          <div class="rl-bar"><div class="rl-fill" id="rl-rpd-bar"></div></div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main">
+
+      <!-- ── TAB: ACCOUNTS ──────────────────────────────────────────────── -->
+      <div class="tab-panel active" id="tab-accounts">
+        <div class="panel-header">
+          <h1>Akun Bot WhatsApp</h1>
+          <button class="btn btn-primary" id="btn-add-account">+ Tambah Akun</button>
+        </div>
+
+        <div id="accounts-grid" class="accounts-grid">
+          <!-- Account cards rendered by JS -->
+          <div class="empty-state" id="accounts-empty">
+            <span>📱</span>
+            <p>Belum ada akun. Klik "Tambah Akun" untuk mulai.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: CHANNELS ──────────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-channels">
+        <div class="panel-header">
+          <h1>Saluran Target</h1>
+          <button class="btn btn-primary" id="btn-add-channel">+ Tambah Saluran</button>
+        </div>
+        <div class="info-box" id="debug-mode-notice" style="display:none">
+          🐛 <strong>Debug Mode Aktif</strong> — Semua pesan WA yang masuk akan di-log. 
+          Minta pacar posting sesuatu, lalu lihat tab "Debug Pesan" untuk menemukan ID salurannya.
+        </div>
+        <div id="channels-list" class="channels-list">
+          <div class="empty-state" id="channels-empty">
+            <span>📡</span>
+            <p>Belum ada saluran. Tambahkan ID saluran WhatsApp pacarmu di sini.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: SETTINGS ──────────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-settings">
+        <div class="panel-header">
+          <h1>Pengaturan</h1>
+        </div>
+        <div class="settings-cards">
+          <div class="settings-card">
+            <h2>🔑 Gemini API Key</h2>
+            <p class="settings-desc">Masukkan API key dari <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>. Key akan diverifikasi sebelum disimpan.</p>
+            <div class="input-row">
+              <input type="password" id="input-apikey" placeholder="AIzaSy..." class="input" autocomplete="off" />
+              <button class="btn btn-primary" id="btn-save-apikey">Simpan & Verifikasi</button>
+            </div>
+            <div id="apikey-status" class="status-msg"></div>
+          </div>
+
+          <div class="settings-card">
+            <h2>⏱️ Interval Polling</h2>
+            <p class="settings-desc">Seberapa sering bot cek postingan baru (60–180 detik).</p>
+            <div class="input-row">
+              <input type="number" id="input-polling" min="60" max="180" placeholder="120" class="input input-sm" />
+              <span class="input-unit">detik</span>
+              <button class="btn btn-primary" id="btn-save-polling">Simpan</button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <h2>🐛 Debug Mode</h2>
+            <p class="settings-desc">Aktifkan untuk melihat semua pesan WA masuk (berguna untuk menemukan channel ID).</p>
+            <label class="toggle-label">
+              <input type="checkbox" id="toggle-debug" class="toggle-input" />
+              <span class="toggle-slider"></span>
+              <span class="toggle-text" id="toggle-debug-text">Nonaktif</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: LOG ───────────────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-log">
+        <div class="panel-header">
+          <h1>Log Aktivitas</h1>
+          <button class="btn btn-ghost" id="btn-clear-log">Bersihkan</button>
+        </div>
+        <div id="log-list" class="log-list">
+          <div class="empty-state"><span>📋</span><p>Belum ada log.</p></div>
+        </div>
+      </div>
+
+      <!-- ── TAB: DEBUG ─────────────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-debug">
+        <div class="panel-header">
+          <h1>Debug — Semua Pesan WA</h1>
+          <button class="btn btn-ghost" id="btn-clear-debug">Bersihkan</button>
+        </div>
+        <p class="debug-hint">Minta pacarmu posting sesuatu di salurannya. JID yang muncul di bawah adalah ID salurannya. Copy JID tersebut ke tab "Saluran".</p>
+        <div id="debug-table-wrapper">
+          <table class="debug-table" id="debug-table">
+            <thead>
+              <tr><th>Waktu</th><th>JID</th><th>Tipe</th><th>Preview</th><th>Aksi</th></tr>
+            </thead>
+            <tbody id="debug-tbody">
+              <tr><td colspan="5" class="table-empty">Belum ada pesan debug.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+  <!-- ── MODALS ─────────────────────────────────────────────────────────── -->
+
+  <!-- QR Modal -->
+  <div class="modal-overlay" id="qr-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2 id="qr-modal-title">Scan QR Code</h2>
+        <button class="modal-close" id="qr-modal-close">✕</button>
+      </div>
+      <div class="modal-body qr-body">
+        <p class="qr-instruction">Buka WhatsApp → Perangkat Tertaut → Tautkan Perangkat → Scan QR ini</p>
+        <div class="qr-container">
+          <div id="qr-loading" class="qr-loading">⏳ Menunggu QR...</div>
+          <img id="qr-image" src="" alt="QR Code" style="display:none" />
+        </div>
+        <div id="qr-status-text" class="qr-status-text"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Account Modal -->
+  <div class="modal-overlay" id="add-account-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Tambah Akun Bot</h2>
+        <button class="modal-close" id="add-account-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>ID Akun <span class="required">*</span></label>
+          <input type="text" id="new-acc-id" placeholder="acc_01" class="input" />
+          <small>Huruf, angka, underscore. Tidak bisa diubah setelah dibuat.</small>
+        </div>
+        <div class="form-group">
+          <label>Nama Tampilan <span class="required">*</span></label>
+          <input type="text" id="new-acc-name" placeholder="Nadia Manis" class="input" />
+        </div>
+        <div class="form-group">
+          <label>Kepribadian</label>
+          <textarea id="new-acc-personality" rows="3" class="input" placeholder="Describe personality...">Penggemar setia yang selalu mendukung dan mengagumi Acell. Ekspresif dan penuh semangat.</textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Probabilitas React</label>
+            <input type="number" id="new-acc-prob" min="0.1" max="1" step="0.05" value="0.75" class="input input-sm" />
+            <small>0.1 – 1.0</small>
+          </div>
+          <div class="form-group">
+            <label>Delay Min (detik)</label>
+            <input type="number" id="new-acc-min-delay" min="5" max="120" value="10" class="input input-sm" />
+          </div>
+          <div class="form-group">
+            <label>Delay Max (detik)</label>
+            <input type="number" id="new-acc-max-delay" min="10" max="300" value="120" class="input input-sm" />
+          </div>
+        </div>
+        <div id="add-account-error" class="error-msg" style="display:none"></div>
+        <button class="btn btn-primary btn-full" id="btn-submit-account">Tambah & Connect</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Channel Modal -->
+  <div class="modal-overlay" id="add-channel-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Tambah Saluran</h2>
+        <button class="modal-close" id="add-channel-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Channel JID <span class="required">*</span></label>
+          <input type="text" id="new-ch-id" placeholder="120363XXXXXXXXX@newsletter" class="input" />
+          <small>Dapatkan dari tab Debug Pesan saat pacar posting.</small>
+        </div>
+        <div class="form-group">
+          <label>Nama Saluran</label>
+          <input type="text" id="new-ch-name" placeholder="Saluran Acell" class="input" />
+        </div>
+        <div id="add-channel-error" class="error-msg" style="display:none"></div>
+        <button class="btn btn-primary btn-full" id="btn-submit-channel">Tambah Saluran</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Account Modal -->
+  <div class="modal-overlay" id="edit-account-modal" style="display:none">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>Edit Akun</h2>
+        <button class="modal-close" id="edit-account-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="edit-acc-id" />
+        <div class="form-group">
+          <label>Nama Tampilan</label>
+          <input type="text" id="edit-acc-name" class="input" />
+        </div>
+        <div class="form-group">
+          <label>Kepribadian</label>
+          <textarea id="edit-acc-personality" rows="4" class="input"></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Probabilitas React</label>
+            <input type="number" id="edit-acc-prob" min="0.1" max="1" step="0.05" class="input input-sm" />
+          </div>
+          <div class="form-group">
+            <label>Delay Min</label>
+            <input type="number" id="edit-acc-min-delay" class="input input-sm" />
+          </div>
+          <div class="form-group">
+            <label>Delay Max</label>
+            <input type="number" id="edit-acc-max-delay" class="input input-sm" />
+          </div>
+        </div>
+        <div id="edit-account-error" class="error-msg" style="display:none"></div>
+        <button class="btn btn-primary btn-full" id="btn-submit-edit">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

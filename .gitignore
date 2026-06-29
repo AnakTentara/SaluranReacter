@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Environment variables (sensitive!)
+.env
+
+# Runtime data — jangan di-push, dibuat otomatis di server
+data/sessions/
+data/media_cache/
+data/db.json
+logs/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
+*.local
+
+# PM2
+.pm2/
