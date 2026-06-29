@@ -47,6 +47,15 @@ export default function configRouter(botManager, io) {
     } catch (err) {
       res.status(400).json({ ok: false, error: err.message });
     }
+  // ── PATCH config (generic config updater) ───────────────────────────────
+  router.patch('/config', (req, res) => {
+    try {
+      const updates = req.body;
+      const saved = saveConfig(updates);
+      res.json({ ok: true, config: saved });
+    } catch (err) {
+      res.status(400).json({ ok: false, error: err.message });
+    }
   });
 
   // ── SET API keys ──────────────────────────────────────────────────────────

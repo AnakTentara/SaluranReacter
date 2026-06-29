@@ -58,6 +58,8 @@ export function savePost(post) {
     media_path: post.mediaPath || null,
     caption: post.caption || null,
     reactions_sent: post.reactions_sent || '[]',
+    is_deleted: post.is_deleted || 0,
+    is_starred: post.is_starred || 0,
     created_at: Math.floor(Date.now() / 1000),
   });
   saveToDisk();
@@ -194,4 +196,46 @@ export function getTodayApiCallCount(apiKeyMasked) {
   return _db.rate_limit_log.filter(
     (l) => l.event === 'call' && l.timestamp >= midnight && l.api_key === (apiKeyMasked || 'default')
   ).length;
+}
+
+// ── Anti-Delete & Starred Gallery Helpers ────────────────────────────────────
+
+export function markPostDeleted(postId) {
+  const post = _db.posts.find((p) => p.id === postId);
+  if (post) {
+    post.is_deleted = 1;
+    saveToDisk();
+    logger.info({ postId }, 'Post marked as deleted (anti-delete active)');
+    return true;
+  }
+  return false;
+}
+
+export function togglePostStar(postId) {
+  const post = _db.posts.find((p) => p.id === postId);
+  if (post) {
+    post.is_starred = post.is_starred === 1 ? 0 : 1;
+    saveToDisk();
+    logger.info({ postId, is_starred: post.is_starred }, 'Post star toggled');
+    return post.is_starred;
+  }
+  throw new Error('Post not found');
+}
+
+export function getStarredPosts() {
+  return _db.posts.filter((p) => p.is_starred === 1);
+}
+
+export function getPostsHistory(limit = 100) {
+  return [..._db.posts]
+    .sort((a, b) => b.timestamp - a.timestamp) // newest first
+    .slice(0, limit);
+}
+
+export function isMediaStarred(mediaKey) {
+  // mediaKey is usually something like "{msgId}_{contentType}"
+  // which maps to post.id
+  const msgId = mediaKey.split('_')[0];
+  const post = _db.posts.find((p) => p.id === msgId);
+  return post ? post.is_starred === 1 : false;
 }

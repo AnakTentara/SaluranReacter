@@ -1,7 +1,13 @@
 import { Router } from 'express';
+import { join, dirname } from 'path';
+import { fileURLToPath } from 'url';
+import { execSync } from 'child_process';
 import { getAllRateLimitStats } from '../ai/ratelimit.js';
-import { getRecentReactions, getRecentDebugMessages, clearDebugMessages } from '../utils/db.js';
+import { getRecentReactions, getRecentDebugMessages, clearDebugMessages, getPostsHistory, togglePostStar, getStarredPosts } from '../utils/db.js';
 import logger from '../utils/logger.js';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const ROOT = join(__dirname, '..', '..');
 
 export default function statusRouter(botManager, reactor) {
   const router = Router();
@@ -87,6 +93,42 @@ export default function statusRouter(botManager, reactor) {
     } catch (err) {
       logger.error({ err: err.message }, '[DEBUG] Force send reaction failed');
       res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
+  // ── Chat Viewer History ──────────────────────────────────────────────────
+  router.get('/posts', (req, res) => {
+    const limit = parseInt(req.query.limit) || 100;
+    res.json(getPostsHistory(limit));
+  });
+
+  // ── Star / Starred Messages ──────────────────────────────────────────────
+  router.post('/posts/:id/star', (req, res) => {
+    try {
+      const { id } = req.params;
+      const isStarred = togglePostStar(id);
+      res.json({ ok: true, is_starred: isStarred });
+    } catch (err) {
+      res.status(404).json({ ok: false, error: err.message });
+    }
+  });
+
+  router.get('/posts/starred', (req, res) => {
+    res.json(getStarredPosts());
+  });
+
+  // ── Sesi & Database Backup ────────────────────────────────────────────────
+  router.get('/backup', (req, res) => {
+    try {
+      const zipPath = join(ROOT, 'data', 'backup.zip');
+      
+      // Gunakan tar bawaan OS untuk membackup config.json dan folder data/ ke file zip
+      execSync(`tar -a -cf "${zipPath}" config.json data/db.json data/sessions`);
+
+      res.download(zipPath, 'wa-reactor-backup.zip');
+    } catch (err) {
+      logger.error({ err: err.message }, 'Failed to generate zip backup');
+      res.status(500).json({ ok: false, error: `Gagal membuat backup: ${err.message}` });
     }
   });
 

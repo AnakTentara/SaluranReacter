@@ -76,6 +76,18 @@ const DOM = {
   debugReactEmoji: document.getElementById('debug-react-emoji'),
   btnDebugReact: document.getElementById('btn-debug-react'),
   debugReactResult: document.getElementById('debug-react-result'),
+
+  // New Chat & Starred References
+  chatHistoryBody: document.getElementById('chat-history-body'),
+  starredMediaGrid: document.getElementById('starred-media-grid'),
+  chatCountLabel: document.getElementById('chat-count-label'),
+  btnRefreshChat: document.getElementById('btn-refresh-chat'),
+
+  // Custom Silent Hours
+  silentStart: document.getElementById('silent-start'),
+  silentEnd: document.getElementById('silent-end'),
+  silentMultiplier: document.getElementById('silent-multiplier'),
+  btnSaveSilent: document.getElementById('btn-save-silent'),
 };
 
 // ── Init App ───────────────────────────────────────────────────────────────
@@ -144,6 +156,12 @@ function setupEventListeners() {
     state.selectedApiKeyIndex = (state.selectedApiKeyIndex + 1) % state.rateLimitStats.length;
     renderRateLimitCurrentKey();
   });
+
+  // Save Custom Silent Hours
+  DOM.btnSaveSilent.addEventListener('click', saveSilentHours);
+
+  // Refresh Chat Viewer
+  DOM.btnRefreshChat.addEventListener('click', loadChatHistory);
 }
 
 function switchTab(tab) {
@@ -154,6 +172,12 @@ function switchTab(tab) {
   DOM.panels.forEach((panel) => {
     panel.classList.toggle('active', panel.id === `tab-${tab}`);
   });
+
+  if (tab === 'chat') {
+    loadChatHistory();
+  } else if (tab === 'starred') {
+    loadStarredGallery();
+  }
 }
 
 // ── Socket.io Events ───────────────────────────────────────────────────────
@@ -206,6 +230,23 @@ socket.on('connect', () => {
 // Logs from server
 socket.on('channel:newPost', (post) => {
   appendLog('info', `[Post] New content detected. Type: ${post.contentType.toUpperCase()}`);
+  if (state.activeTab === 'chat') {
+    loadChatHistory();
+  }
+});
+
+socket.on('posts:deleted', ({ id }) => {
+  const bubble = document.querySelector(`[data-post-id="${id}"]`);
+  if (bubble) {
+    const footer = bubble.querySelector('.chat-bubble-footer');
+    if (footer && !bubble.querySelector('.chat-deleted-badge')) {
+      const badge = document.createElement('span');
+      badge.className = 'chat-deleted-badge';
+      badge.textContent = 'Dihapus';
+      footer.prepend(badge);
+    }
+    appendLog('warning', `[Anti-Delete] Pesan ${id} dihapus di WhatsApp, tetapi dipertahankan di dashboard.`);
+  }
 });
 
 socket.on('ai:decision', (data) => {
@@ -253,6 +294,11 @@ async function fetchConfig() {
     DOM.toggleDebug.checked = state.config.debugMode;
     DOM.toggleDebugText.textContent = state.config.debugMode ? 'Aktif' : 'Nonaktif';
     DOM.debugModeNotice.style.display = state.config.debugMode ? 'block' : 'none';
+
+    // Silent hours prefill
+    DOM.silentStart.value = state.config.silentStart !== undefined ? state.config.silentStart : 23;
+    DOM.silentEnd.value = state.config.silentEnd !== undefined ? state.config.silentEnd : 6;
+    DOM.silentMultiplier.value = state.config.silentMultiplier !== undefined ? state.config.silentMultiplier : 4;
 
     // Set QR listeners for any existing accounts
     state.accounts.forEach((acc) => {
@@ -925,3 +971,221 @@ function escapeHtml(str) {
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
 }
+
+// ── Custom Silent Hours ──────────────────────────────────────────────────────
+async function saveSilentHours() {
+  const silentStart = parseInt(DOM.silentStart.value);
+  const silentEnd = parseInt(DOM.silentEnd.value);
+  const silentMultiplier = parseInt(DOM.silentMultiplier.value);
+
+  DOM.btnSaveSilent.disabled = true;
+  try {
+    const res = await fetch('/api/config', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ silentStart, silentEnd, silentMultiplier }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      appendLog('success', `Jam Tidur diupdate: ${silentStart}:00 s/d ${silentEnd}:00 WIB (${silentMultiplier}x delay)`);
+      alert('Jam Tidur berhasil disimpan!');
+    } else {
+      alert(`Gagal menyimpan: ${data.error}`);
+    }
+  } catch (err) {
+    alert(`Network error: ${err.message}`);
+  } finally {
+    DOM.btnSaveSilent.disabled = false;
+  }
+}
+
+// ── Chat History Viewer ──────────────────────────────────────────────────────
+async function loadChatHistory() {
+  DOM.chatHistoryBody.innerHTML = '<div class="empty-state">⏳ Memuat riwayat chat...</div>';
+  try {
+    const res = await fetch('/api/posts');
+    const posts = await res.json();
+    
+    // Sort chronological (oldest first for display)
+    posts.reverse();
+
+    DOM.chatCountLabel.textContent = `${posts.length} Postingan Tersimpan`;
+
+    if (posts.length === 0) {
+      DOM.chatHistoryBody.innerHTML = `
+        <div class="empty-state">
+          <span>💬</span>
+          <p>Belum ada postingan saluran. Aktifkan bot dan tunggu postingan baru.</p>
+        </div>`;
+      return;
+    }
+
+    DOM.chatHistoryBody.innerHTML = '';
+    posts.forEach((post) => {
+      const bubble = document.createElement('div');
+      bubble.className = 'chat-bubble acell';
+      bubble.setAttribute('data-post-id', post.id);
+
+      const dt = new Date(post.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      const isStarred = post.is_starred === 1;
+
+      const actionsHtml = `
+        <div class="chat-bubble-actions">
+          <button class="chat-star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${encodeURIComponent(post.id)}')" title="${isStarred ? 'Batal Bintangi' : 'Bintangi (Simpan Permanen)'}">⭐</button>
+        </div>
+      `;
+
+      let mediaHtml = '';
+      if (post.media_path) {
+        // Media files are saved as {msgId}_{contentType} in media_cache
+        const mediaUrl = `/media_cache/${post.id}_${post.content_type}`;
+        if (post.content_type === 'image') {
+          mediaHtml = `<div class="chat-bubble-media"><a href="${mediaUrl}" target="_blank"><img src="${mediaUrl}" alt="Media Post" /></a></div>`;
+        } else if (post.content_type === 'video') {
+          mediaHtml = `<div class="chat-bubble-media"><video controls src="${mediaUrl}"></video></div>`;
+        } else if (post.content_type === 'audio') {
+          mediaHtml = `
+            <div class="chat-bubble-audio">
+              <span class="audio-icon">🎤</span>
+              <audio controls src="${mediaUrl}"></audio>
+            </div>`;
+        } else if (post.content_type === 'sticker') {
+          mediaHtml = `<div class="chat-bubble-media"><img src="${mediaUrl}" style="max-height: 120px; max-width: 120px; background: transparent;" /></div>`;
+        }
+      }
+
+      let reactionsHtml = '';
+      if (post.reactions_sent) {
+        try {
+          const reactions = JSON.parse(post.reactions_sent);
+          if (reactions.length > 0) {
+            reactionsHtml = '<div class="chat-bubble-reactions">';
+            reactions.forEach((r) => {
+              reactionsHtml += `
+                <div class="reaction-chip" title="Dikirim oleh ${escapeHtml(r.name)} (${r.accountId})">
+                  <span>${r.emoji}</span>
+                  <span class="reaction-bot-name">${escapeHtml(r.name)}</span>
+                </div>
+              `;
+            });
+            reactionsHtml += '</div>';
+          }
+        } catch (e) {}
+      }
+
+      const deletedBadge = post.is_deleted === 1 ? '<span class="chat-deleted-badge" style="margin-right: 6px;">Dihapus</span>' : '';
+
+      bubble.innerHTML = `
+        <div class="chat-bubble-header">
+          <span>Acell Saluran</span>
+          ${actionsHtml}
+        </div>
+        ${mediaHtml}
+        ${post.text_content ? `<div class="chat-bubble-text" style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(post.text_content)}</div>` : ''}
+        ${post.caption ? `<div class="chat-bubble-caption" style="margin-top: 4px; font-size: 13.5px; opacity: 0.95; white-space: pre-wrap; word-break: break-word;">${escapeHtml(post.caption)}</div>` : ''}
+        <div class="chat-bubble-footer">
+          ${deletedBadge}
+          <span class="chat-time">${dt}</span>
+        </div>
+        ${reactionsHtml}
+      `;
+
+      DOM.chatHistoryBody.appendChild(bubble);
+    });
+
+    // Auto-scroll chat body to the bottom
+    setTimeout(() => {
+      DOM.chatHistoryBody.scrollTop = DOM.chatHistoryBody.scrollHeight;
+    }, 100);
+  } catch (err) {
+    console.error('Failed to load chat history', err);
+    DOM.chatHistoryBody.innerHTML = `<div class="empty-state"><p style="color:var(--error)">Gagal memuat chat: ${err.message}</p></div>`;
+  }
+}
+
+// ── Starred Media Gallery ────────────────────────────────────────────────────
+async function loadStarredGallery() {
+  DOM.starredMediaGrid.innerHTML = '<div class="empty-state">⏳ Memuat galeri bintang...</div>';
+  try {
+    const res = await fetch('/api/posts/starred');
+    const posts = await res.json();
+
+    if (posts.length === 0) {
+      DOM.starredMediaGrid.innerHTML = `
+        <div class="empty-state">
+          <span>⭐</span>
+          <p>Belum ada media berbintang. Klik ikon ⭐ pada balon chat untuk menyimpannya di sini.</p>
+        </div>`;
+      return;
+    }
+
+    DOM.starredMediaGrid.innerHTML = '';
+    posts.forEach((post) => {
+      const item = document.createElement('div');
+      item.className = 'starred-item';
+      item.setAttribute('data-starred-id', post.id);
+
+      const dt = new Date(post.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      const mediaUrl = `/media_cache/${post.id}_${post.content_type}`;
+
+      let mediaWrapperHtml = '';
+      if (post.media_path) {
+        if (post.content_type === 'image' || post.content_type === 'sticker') {
+          mediaWrapperHtml = `<img src="${mediaUrl}" alt="Starred Media" />`;
+        } else if (post.content_type === 'video') {
+          mediaWrapperHtml = `<video src="${mediaUrl}" preload="metadata" muted></video>`;
+        } else if (post.content_type === 'audio') {
+          mediaWrapperHtml = `<div style="font-size: 40px;">🎤</div>`;
+        }
+      } else {
+        mediaWrapperHtml = `<div style="font-size: 40px; opacity: 0.5;">💬</div>`;
+      }
+
+      item.innerHTML = `
+        <div class="starred-media-wrapper">
+          ${mediaWrapperHtml}
+          <button class="starred-unstar-btn" onclick="toggleStar('${encodeURIComponent(post.id)}', true)" title="Hapus dari Bintang">⭐</button>
+        </div>
+        <div class="starred-info">
+          <div class="starred-caption">${escapeHtml(post.caption || post.text_content || `[Pesan ${post.content_type.toUpperCase()}]`)}</div>
+          <div class="starred-meta">
+            <span>Tipe: <strong>${post.content_type.toUpperCase()}</strong></span>
+            <span>${dt}</span>
+          </div>
+        </div>
+      `;
+
+      DOM.starredMediaGrid.appendChild(item);
+    });
+  } catch (err) {
+    console.error('Failed to load starred gallery', err);
+    DOM.starredMediaGrid.innerHTML = `<div class="empty-state"><p style="color:var(--error)">Gagal memuat galeri: ${err.message}</p></div>`;
+  }
+}
+
+// Toggle post star status
+window.toggleStar = async function (id, fromGallery = false) {
+  try {
+    const res = await fetch(`/api/posts/${id}/star`, { method: 'POST' });
+    const data = await res.json();
+    if (data.ok) {
+      if (fromGallery) {
+        // If unstarring from within the starred gallery, just refresh the gallery
+        loadStarredGallery();
+      } else {
+        // Refresh chat bubble
+        const bubble = document.querySelector(`[data-post-id="${decodeURIComponent(id)}"]`);
+        if (bubble) {
+          const starBtn = bubble.querySelector('.chat-star-btn');
+          if (starBtn) {
+            starBtn.classList.toggle('starred', data.is_starred);
+            starBtn.title = data.is_starred ? 'Batal Bintangi' : 'Bintangi (Simpan Permanen)';
+          }
+        }
+        appendLog('info', `Pesan ${decodeURIComponent(id)} ${data.is_starred ? 'dibintangi (disimpan permanen)' : 'batal dibintangi'}`);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to toggle star', err);
+  }
+};

@@ -3,6 +3,7 @@ import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { existsSync, mkdirSync, writeFileSync, readFileSync, readdirSync, statSync, unlinkSync } from 'fs';
 import logger from '../utils/logger.js';
+import { isMediaStarred } from '../utils/db.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CACHE_DIR = join(__dirname, '..', '..', 'data', 'media_cache');
@@ -142,6 +143,11 @@ export function cleanMediaCache() {
       const filePath = join(CACHE_DIR, file);
       const stat = statSync(filePath);
       if (now - stat.mtimeMs > CACHE_TTL_MS) {
+        // Protect starred media from deletion
+        if (isMediaStarred(file)) {
+          logger.debug({ file }, 'Skipping cleanup of starred media file');
+          continue;
+        }
         unlinkSync(filePath);
         removed++;
       }

@@ -937,3 +937,280 @@ textarea.input {
   }
 }
 
+/* ── CHAT VIEWER & BALLOONS ──────────────────────────────────────────────── */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 160px);
+  background-color: #0b141a; /* Background WA gelap */
+  background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); /* Pattern WA */
+  background-blend-mode: overlay;
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  overflow: hidden;
+  box-shadow: var(--shadow-lg);
+}
+
+.chat-header-info {
+  background-color: #202c33;
+  padding: 12px 20px;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border);
+}
+
+.chat-title {
+  font-weight: bold;
+  color: var(--text-main);
+  font-size: 16px;
+}
+
+.chat-subtitle {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-top: 2px;
+}
+
+.chat-body {
+  flex-grow: 1;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* WhatsApp style chat bubble */
+.chat-bubble {
+  position: relative;
+  max-width: 65%;
+  padding: 8px 12px;
+  border-radius: 8px;
+  line-height: 1.5;
+  font-size: 14.5px;
+  color: #e9edef;
+  align-self: flex-start;
+  background-color: #202c33; /* Warna balon default WA gelap */
+  box-shadow: 0 1px 0.5px rgba(0,0,0,0.13);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* Jika dia postingan Acell (kita gunakan warna hijau WA khas) */
+.chat-bubble.acell {
+  background-color: #005c4b; /* Balon hijau WA */
+  align-self: flex-start;
+}
+
+/* Header balon untuk metadata */
+.chat-bubble-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: #8696a0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  padding-bottom: 4px;
+}
+
+.chat-bubble-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.chat-star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 13px;
+  transition: transform 0.2s;
+  color: #8696a0;
+}
+
+.chat-star-btn:hover {
+  transform: scale(1.2);
+}
+
+.chat-star-btn.starred {
+  color: #f59e0b; /* Warna emas */
+  filter: drop-shadow(0 0 2px rgba(245, 158, 11, 0.5));
+}
+
+.chat-bubble-media {
+  max-width: 100%;
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 4px;
+}
+
+.chat-bubble-media img,
+.chat-bubble-media video {
+  max-width: 100%;
+  max-height: 350px;
+  display: block;
+  object-fit: contain;
+  background-color: rgba(0,0,0,0.3);
+}
+
+.chat-bubble-audio {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: rgba(0,0,0,0.2);
+  padding: 8px 12px;
+  border-radius: 6px;
+  margin-top: 4px;
+  width: 280px;
+}
+
+.audio-icon {
+  font-size: 20px;
+}
+
+.chat-bubble-audio audio {
+  flex-grow: 1;
+  height: 32px;
+}
+
+.chat-bubble-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #8696a0;
+  margin-top: 2px;
+  align-self: flex-end;
+  gap: 8px;
+}
+
+.chat-time {
+  user-select: none;
+}
+
+.chat-deleted-badge {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+  padding: 1px 4px;
+  border-radius: 4px;
+  font-size: 9px;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+/* Gelembung reaksi di bawah balon */
+.chat-bubble-reactions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.reaction-chip {
+  background-color: #111b21;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 2px 6px;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #e9edef;
+}
+
+.reaction-bot-name {
+  font-size: 9px;
+  color: #8696a0;
+}
+
+/* ── STARRED GALLERY GRID ───────────────────────────────────────────────── */
+.starred-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.starred-item {
+  background-color: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: relative;
+}
+
+.starred-item:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.starred-media-wrapper {
+  position: relative;
+  aspect-ratio: 1;
+  background-color: rgba(0,0,0,0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.starred-media-wrapper img,
+.starred-media-wrapper video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.starred-unstar-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background-color: rgba(0,0,0,0.6);
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #f59e0b;
+  font-size: 14px;
+  transition: background-color 0.2s;
+}
+
+.starred-unstar-btn:hover {
+  background-color: rgba(0,0,0,0.9);
+}
+
+.starred-info {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-grow: 1;
+}
+
+.starred-caption {
+  font-size: 13px;
+  color: var(--text-main);
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.starred-meta {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+

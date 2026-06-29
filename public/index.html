@@ -23,6 +23,14 @@
           <span class="nav-icon">📱</span>
           <span>Akun Bot</span>
         </button>
+        <button class="nav-btn" data-tab="chat" id="nav-chat">
+          <span class="nav-icon">💬</span>
+          <span>Obrolan Saluran</span>
+        </button>
+        <button class="nav-btn" data-tab="starred" id="nav-starred">
+          <span class="nav-icon">⭐</span>
+          <span>Galeri Bintang</span>
+        </button>
         <button class="nav-btn" data-tab="channels" id="nav-channels">
           <span class="nav-icon">📡</span>
           <span>Saluran</span>
@@ -81,6 +89,40 @@
         </div>
       </div>
 
+      <!-- ── TAB: CHAT ──────────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-chat">
+        <div class="panel-header">
+          <h1>Obrolan Saluran</h1>
+          <button class="btn btn-ghost" id="btn-refresh-chat">🔄 Refresh</button>
+        </div>
+        <div class="chat-container">
+          <div class="chat-header-info">
+            <span class="chat-title">💬 Feed Saluran Acell</span>
+            <span class="chat-subtitle" id="chat-count-label">0 Postingan Tersimpan</span>
+          </div>
+          <div class="chat-body" id="chat-history-body">
+            <div class="empty-state">
+              <span>💬</span>
+              <p>Belum ada postingan saluran. Aktifkan bot dan tunggu postingan baru.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── TAB: STARRED ───────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-starred">
+        <div class="panel-header">
+          <h1>Galeri Bintang</h1>
+        </div>
+        <p class="settings-desc" style="margin-bottom: 20px;">Menampilkan postingan media (Foto/Video/Audio/Stiker) yang kamu tandai dengan bintang (⭐). Berkas media ini disimpan permanen dan aman dari pembersihan cache otomatis.</p>
+        <div class="starred-grid" id="starred-media-grid">
+          <div class="empty-state">
+            <span>⭐</span>
+            <p>Belum ada media berbintang. Klik ikon ⭐ pada balon chat untuk menyimpannya di sini.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- ── TAB: CHANNELS ──────────────────────────────────────────────── -->
       <div class="tab-panel" id="tab-channels">
         <div class="panel-header">
@@ -134,6 +176,32 @@
               <span class="toggle-slider"></span>
               <span class="toggle-text" id="toggle-debug-text">Nonaktif</span>
             </label>
+          </div>
+
+          <div class="settings-card">
+            <h2>🌙 Jam Tidur (Silent Hours)</h2>
+            <p class="settings-desc">Perlambat respons bot pada waktu tertentu (menggunakan zona waktu WIB Asia/Jakarta) untuk mensimulasikan waktu tidur manusia normal.</p>
+            <div class="form-row" style="display:flex; gap:12px; margin-bottom:12px;">
+              <div class="form-group" style="flex:1;">
+                <label>Jam Mulai (00-23)</label>
+                <input type="number" id="silent-start" min="0" max="23" value="23" class="input" />
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label>Jam Selesai (00-23)</label>
+                <input type="number" id="silent-end" min="0" max="23" value="6" class="input" />
+              </div>
+              <div class="form-group" style="flex:1;">
+                <label>Pengali Delay (X Lipat)</label>
+                <input type="number" id="silent-multiplier" min="1" max="10" value="4" class="input" />
+              </div>
+            </div>
+            <button class="btn btn-primary btn-full" id="btn-save-silent">Simpan Jam Tidur</button>
+          </div>
+
+          <div class="settings-card">
+            <h2>💾 Backup Data & Sesi Bot</h2>
+            <p class="settings-desc">Unduh berkas konfigurasi, database log reaksi, beserta sesi login WhatsApp bot yang sudah tersambung. Gunakan berkas ini untuk memulihkan bot jika server di-install ulang.</p>
+            <a href="/api/backup" target="_blank" class="btn btn-ghost btn-full" style="display: block; text-align: center; text-decoration: none; padding: 12px 0; font-weight: bold; border: 2px dashed var(--border);">📥 Unduh Backup (.zip)</a>
           </div>
         </div>
       </div>

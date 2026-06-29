@@ -1,5 +1,6 @@
 import { logReaction } from '../utils/db.js';
 import logger from '../utils/logger.js';
+import { getConfig } from '../utils/config.js';
 
 /**
  * Manages the reaction sending queue.
@@ -24,13 +25,27 @@ export class Reactor {
   queueReactions(postId, channelJid, messageKey, serverId, reactions) {
     logger.info({ postId, count: reactions.length }, 'Queueing reactions');
 
-    // Check Jakarta time for Silent Hours (23:00 - 06:00 WIB)
+    // Load dynamic silent hours from config
+    const cfg = getConfig();
+    const silentStart = cfg.silentStart !== undefined ? cfg.silentStart : 23;
+    const silentEnd = cfg.silentEnd !== undefined ? cfg.silentEnd : 6;
+    const silentMultiplierValue = cfg.silentMultiplier !== undefined ? cfg.silentMultiplier : 4;
+
+    // Check Jakarta time for Silent Hours
     const jktHourStr = new Date().toLocaleTimeString('en-US', { timeZone: 'Asia/Jakarta', hour12: false, hour: '2-digit' });
     const hourInt = parseInt(jktHourStr, 10);
-    const isSilentHours = hourInt >= 23 || hourInt < 6;
+    
+    let isSilentHours = false;
+    if (silentStart > silentEnd) {
+      // Overnight range, e.g. 23 to 6
+      if (hourInt >= silentStart || hourInt < silentEnd) isSilentHours = true;
+    } else {
+      // Daytime range, e.g. 13 to 17
+      if (hourInt >= silentStart && hourInt < silentEnd) isSilentHours = true;
+    }
 
     if (isSilentHours) {
-      logger.info({ hour: hourInt }, '🛌 Silent Hours active (23:00-06:00 WIB) — multiplying all delays by 4');
+      logger.info({ hour: hourInt, silentStart, silentEnd, multiplier: silentMultiplierValue }, '🛌 Silent Hours active — multiplying all delays');
     }
 
     for (const reaction of reactions) {
@@ -38,7 +53,7 @@ export class Reactor {
       
       let finalDelaySeconds = delaySeconds;
       if (isSilentHours) {
-        finalDelaySeconds = delaySeconds * 4;
+        finalDelaySeconds = delaySeconds * silentMultiplierValue;
       }
 
       // Add small random jitter (0–15s) on top of AI delay for extra naturalness

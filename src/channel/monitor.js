@@ -1,5 +1,5 @@
 import { getConfig } from '../utils/config.js';
-import { saveDebugMessage } from '../utils/db.js';
+import { saveDebugMessage, markPostDeleted } from '../utils/db.js';
 import { detectContentType, extractTextContent, extractCaption, downloadAndEncodeMedia } from './media.js';
 import { recordPost, getPostContext, isPostReacted, markPostReacted } from './history.js';
 import { analyzePost } from '../ai/gemini.js';
@@ -53,6 +53,20 @@ export async function handleIncomingMessage(sock, messages) {
 
   for (const msg of messages) {
     if (!msg?.key?.remoteJid) continue;
+
+    // Detect message delete (revoke) event
+    const protocolMsg = msg.message?.protocolMessage;
+    if (protocolMsg && (protocolMsg.type === 3 || protocolMsg.type === 'REVOKE' || msg.messageStubType === 'REVOKE')) {
+      const originalMsgId = protocolMsg.key?.id;
+      if (originalMsgId) {
+        logger.info({ originalMsgId }, 'Detected message delete (revoke) event from WhatsApp');
+        markPostDeleted(originalMsgId);
+        if (io) {
+          io.emit('posts:deleted', { id: originalMsgId });
+        }
+      }
+      continue;
+    }
 
     const jid = msg.key.remoteJid;
     const contentType = detectContentType(msg);

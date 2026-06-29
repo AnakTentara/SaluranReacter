@@ -39,6 +39,7 @@ const io = new SocketIO(httpServer, { cors: { origin: '*' } });
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(PUBLIC_DIR));
+app.use('/media_cache', express.static(join(ROOT, 'data', 'media_cache')));
 
 // ── Bot Setup ────────────────────────────────────────────────────────────────
 const botManager = new BotManager(io);
