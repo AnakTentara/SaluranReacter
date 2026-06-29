@@ -90,11 +90,11 @@ export function getContextPosts(channelId) {
     .filter((p) => p.timestamp >= todayStart && ['text', 'image', 'video', 'audio', 'sticker'].includes(p.content_type))
     .sort((a, b) => b.timestamp - a.timestamp);
 
-  // Yesterday's text posts (limit 15, descending)
+  // Yesterday's text posts (limit 20, descending)
   const yesterdayPosts = chPosts
     .filter((p) => p.timestamp >= yesterdayStart && p.timestamp < todayStart && p.content_type === 'text')
     .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 15);
+    .slice(0, 20);
 
   return { todayPosts, yesterdayPosts };
 }
