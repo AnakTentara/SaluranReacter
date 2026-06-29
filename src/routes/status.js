@@ -67,7 +67,7 @@ export default function statusRouter(botManager, reactor) {
 
   // ── Debug: Force send a reaction ─────────────────────────────────────────
   router.post('/debug/send-reaction', async (req, res) => {
-    const { accountId, channelJid, messageId, emoji } = req.body;
+    const { accountId, channelJid, messageId, serverId, emoji } = req.body;
 
     if (!accountId || !channelJid || !messageId || !emoji) {
       return res.status(400).json({ ok: false, error: 'accountId, channelJid, messageId, and emoji are required' });
@@ -80,10 +80,10 @@ export default function statusRouter(botManager, reactor) {
     const messageKey = { remoteJid: channelJid, fromMe: false, id: messageId };
     
     try {
-      // Try with messageId as serverId directly
-      logger.info({ accountId, channelJid, messageId, emoji }, '[DEBUG] Force sending reaction');
-      await session.sendReaction(channelJid, messageKey, messageId, emoji);
-      res.json({ ok: true, message: `Reaction ${emoji} sent from ${accountId} to ${channelJid} for message ${messageId}` });
+      const targetServerId = serverId || messageId;
+      logger.info({ accountId, channelJid, messageId, serverId: targetServerId, emoji }, '[DEBUG] Force sending reaction');
+      await session.sendReaction(channelJid, messageKey, targetServerId, emoji);
+      res.json({ ok: true, message: `Reaction ${emoji} sent from ${accountId} to ${channelJid} (server_id: ${targetServerId})` });
     } catch (err) {
       logger.error({ err: err.message }, '[DEBUG] Force send reaction failed');
       res.status(500).json({ ok: false, error: err.message });
