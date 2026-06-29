@@ -24,7 +24,10 @@ ATURAN PENTING:
     1. Jika Acell menulis "wkwk" (terutama yang pendek/singkat), itu biasanya merupakan KETAWA PALSU untuk menutupi kekecewaan, rasa canggung, atau rasa sakit hatinya. Jangan dianggap sebagai postingan lucu! Rekomendasi reaksi untuk "wkwk" adalah: 🙂 (fake smile), 🤦‍♀️ (tepuk jidat), 🗿 (deadpan), atau 🥹 (sedih/prihatin/terharu).
     2. Jika Acell tertawa dengan cara lain seperti "AHAHA", "hahaha", "LUCUU BGTT ANJIRR" (tertawa lepas/heboh), itu baru KETAWA ASLI/BENARAN LUCU. Kamu wajib mereaksikan emoji lucu/tertawa asli seperti: 😭 (ketawa ngakak) atau 😂 (ngejek/lucu).
   * Jika Acell memposting stiker lucu, meme, lawakan, atau cerita konyol, baru gunakan emoji santai/lucu (seperti 😂, 😭 untuk ngakak, 🗿, atau 👍).
-- EFEK PERSATUAN/KONSENSUS (HERD EFFECT): Agar terlihat alami, buatlah 2 atau 3 akun bot memiliki pendapat yang sama dengan mengirimkan emoji reaction yang SAMA (misal: jika postingannya lucu sekali, 3 bot kompak mengirim emoji 😭 atau 😂; jika Acell bertanya pendapat atau menawarkan sesuatu, beberapa bot kompak react ✅ atau 2️⃣).
+- KONSENSUS TIPE BOT (PELOPOR VS PENGIKUT) [SANGAT PENTING]:
+  * Akun bertipe "pioneer" (Pelopor) menentukan emoji reaction-nya secara mandiri berdasarkan analisis postingan dan kepribadiannya sendiri.
+  * Akun bertipe "follower" (Pengikut) WAJIB menyelaraskan diri dan hanya boleh memilih emoji dari daftar emoji yang telah dipilih oleh akun-akun "pioneer" pada postingan tersebut. Mereka dilarang keras memunculkan emoji baru sendiri untuk menyimulasikan gerombolan yang saling setuju/ikut-ikutan (misal: jika Pioneer memilih 🥹 dan 👍, maka Follower wajib memilih antara 🥹 atau 👍, tidak boleh memilih emoji lain).
+  * Jika kebetulan tidak ada satupun akun "pioneer" yang memberikan reaksi pada postingan tersebut, barulah akun "follower" dibebaskan memilih emoji reaction secara mandiri.
 - TIDAK semua akun harus react setiap postingan. Variasikan secara natural (sekitar 70–95% akun bereaksi tergantung "keseruan" konten).
 - Delay harus sangat bervariasi (dari 5 detik sampai 3 menit) agar terlihat seperti orang sungguhan yang masing-masing membuka notifikasi di waktu berbeda.
 - Pertimbangkan jam posting: malam hari = followers lebih aktif, dini hari = lebih sepi.
@@ -78,7 +81,7 @@ export function buildUserPrompt({ post, contextPosts, accounts }) {
     .filter((a) => a.enabled)
     .map(
       (a) =>
-        `- ID: ${a.id} | Nama: ${a.name}\n  Kepribadian: ${a.personality}\n  Probabilitas react: ${Math.round(a.reactProbability * 100)}%\n  Delay range: ${a.minDelaySeconds}–${a.maxDelaySeconds} detik`
+        `- ID: ${a.id} | Nama: ${a.name} | Tipe: ${a.botType || 'pioneer'}\n  Kepribadian: ${a.personality}\n  Probabilitas react: ${Math.round(a.reactProbability * 100)}%\n  Delay range: ${a.minDelaySeconds}–${a.maxDelaySeconds} detik`
     )
     .join('\n\n');
 

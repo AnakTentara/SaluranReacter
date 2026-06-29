@@ -76,6 +76,7 @@ export function addAccount(account) {
     id: account.id,
     name: account.name || account.id,
     enabled: account.enabled !== false,
+    botType: account.botType || 'pioneer', // pioneer | follower
     personality: account.personality || 'Followers biasa yang suka konten saluran ini.',
     reactProbability: account.reactProbability ?? 0.7,
     minDelaySeconds: account.minDelaySeconds ?? 10,

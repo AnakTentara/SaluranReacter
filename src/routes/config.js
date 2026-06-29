@@ -106,11 +106,11 @@ export default function configRouter(botManager, io) {
 
   router.post('/accounts', async (req, res) => {
     try {
-      const { id, name, personality, reactProbability, minDelaySeconds, maxDelaySeconds } = req.body;
+      const { id, name, botType, personality, reactProbability, minDelaySeconds, maxDelaySeconds } = req.body;
       if (!id) return res.status(400).json({ ok: false, error: 'id is required' });
       if (!name) return res.status(400).json({ ok: false, error: 'name is required' });
 
-      const account = addAccount({ id, name, personality, reactProbability, minDelaySeconds, maxDelaySeconds });
+      const account = addAccount({ id, name, botType, personality, reactProbability, minDelaySeconds, maxDelaySeconds });
 
       // Start connecting the new account
       await botManager.addSession(account);
