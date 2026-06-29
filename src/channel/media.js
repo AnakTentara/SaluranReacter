@@ -14,11 +14,39 @@ const MAX_MEDIA_BYTES = 18 * 1024 * 1024;
 if (!existsSync(CACHE_DIR)) mkdirSync(CACHE_DIR, { recursive: true });
 
 /**
+ * Recursively normalizes message content to handle viewOnce, ephemeral, 
+ * documentWithCaption, and newsletter message wrappers in Baileys.
+ */
+export function getNormalizedMessage(msg) {
+  if (!msg) return null;
+  let m = msg.message || msg;
+
+  while (m) {
+    if (m.viewOnceMessage?.message) {
+      m = m.viewOnceMessage.message;
+    } else if (m.viewOnceMessageV2?.message) {
+      m = m.viewOnceMessageV2.message;
+    } else if (m.viewOnceMessageV2Extension?.message) {
+      m = m.viewOnceMessageV2Extension.message;
+    } else if (m.ephemeralMessage?.message) {
+      m = m.ephemeralMessage.message;
+    } else if (m.documentWithCaptionMessage?.message) {
+      m = m.documentWithCaptionMessage.message;
+    } else if (m.newsletterMessage?.message) {
+      m = m.newsletterMessage.message;
+    } else {
+      break;
+    }
+  }
+  return m;
+}
+
+/**
  * Detect content type from a Baileys message object.
  * Returns: 'text' | 'image' | 'video' | 'audio' | 'sticker' | 'document' | 'unknown'
  */
 export function detectContentType(msg) {
-  const m = msg?.message;
+  const m = getNormalizedMessage(msg);
   if (!m) return 'unknown';
 
   if (m.conversation || m.extendedTextMessage) return 'text';
@@ -26,7 +54,13 @@ export function detectContentType(msg) {
   if (m.videoMessage) return 'video';
   if (m.audioMessage || m.pttMessage) return 'audio';
   if (m.stickerMessage) return 'sticker';
-  if (m.documentMessage) return 'document';
+  if (m.documentMessage) {
+    const mime = m.documentMessage.mimetype || '';
+    if (mime.startsWith('image/')) return 'image';
+    if (mime.startsWith('video/')) return 'video';
+    if (mime.startsWith('audio/')) return 'audio';
+    return 'document';
+  }
   if (m.reactionMessage) return 'reaction';
 
   return 'unknown';
@@ -36,7 +70,7 @@ export function detectContentType(msg) {
  * Extract text content from a message.
  */
 export function extractTextContent(msg) {
-  const m = msg?.message;
+  const m = getNormalizedMessage(msg);
   if (!m) return null;
   return (
     m.conversation ||
@@ -52,7 +86,7 @@ export function extractTextContent(msg) {
  * Extract caption (for media messages).
  */
 export function extractCaption(msg) {
-  const m = msg?.message;
+  const m = getNormalizedMessage(msg);
   if (!m) return null;
   return m.imageMessage?.caption || m.videoMessage?.caption || m.documentMessage?.caption || null;
 }
@@ -89,11 +123,24 @@ export async function downloadAndEncodeMedia(msg, contentType, sock) {
   }
 
   try {
-    const mediaType = contentType === 'audio' ? 'audio' : contentType;
-    const buffer = await downloadMediaMessage(msg, mediaType, {}, { logger, reuploadRequest: sock?.updateMediaMessage });
+    const m = getNormalizedMessage(msg);
+    let mediaType = contentType === 'audio' ? 'audio' : contentType;
+    if (m?.documentMessage) {
+      mediaType = 'document';
+    }
+
+    const buffer = await downloadMediaMessage(
+      msg,
+      mediaType,
+      {},
+      { 
+        logger, 
+        reuploadRequest: sock?.updateMediaMessage 
+      }
+    );
 
     if (!buffer || buffer.length === 0) {
-      logger.warn({ msgId, contentType }, 'Empty media buffer');
+      logger.warn({ msgId, contentType, mediaType }, 'Empty media buffer returned from Baileys');
       return null;
     }
 
@@ -115,7 +162,7 @@ export async function downloadAndEncodeMedia(msg, contentType, sock) {
     logger.debug({ msgId, contentType, size: buffer.length, mimeType }, 'Media downloaded & cached (raw buffer + meta.json)');
     return { base64, mimeType, filePath: cachePath, size: buffer.length };
   } catch (err) {
-    logger.error({ err: err.message, msgId, contentType }, 'Failed to download media');
+    logger.error({ err: err.stack || err.message, msgId, contentType }, 'Failed to download media message');
     return null;
   }
 }
@@ -124,16 +171,16 @@ export async function downloadAndEncodeMedia(msg, contentType, sock) {
  * Get MIME type from message object.
  */
 function getMimeType(msg, contentType) {
-  const m = msg?.message;
+  const m = getNormalizedMessage(msg);
   switch (contentType) {
     case 'image':
-      return m?.imageMessage?.mimetype || 'image/jpeg';
+      return m?.imageMessage?.mimetype || m?.documentMessage?.mimetype || 'image/jpeg';
     case 'video':
-      return m?.videoMessage?.mimetype || 'video/mp4';
+      return m?.videoMessage?.mimetype || m?.documentMessage?.mimetype || 'video/mp4';
     case 'audio':
-      return m?.audioMessage?.mimetype || m?.pttMessage?.mimetype || 'audio/ogg; codecs=opus';
+      return m?.audioMessage?.mimetype || m?.pttMessage?.mimetype || m?.documentMessage?.mimetype || 'audio/ogg; codecs=opus';
     case 'sticker':
-      return m?.stickerMessage?.mimetype || 'image/webp';
+      return m?.stickerMessage?.mimetype || m?.documentMessage?.mimetype || 'image/webp';
     default:
       return 'application/octet-stream';
   }
