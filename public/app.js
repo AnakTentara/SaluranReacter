@@ -255,7 +255,6 @@ function renderAccounts() {
   DOM.accountsGrid.innerHTML = '';
   if (state.accounts.length === 0) {
     document.getElementById('accounts-empty').style.display = 'block';
-    DOM.accountsGrid.appendChild(document.getElementById('accounts-empty'));
     return;
   }
 
@@ -310,7 +309,6 @@ function renderChannels() {
   DOM.channelsList.innerHTML = '';
   if (state.channels.length === 0) {
     document.getElementById('channels-empty').style.display = 'block';
-    DOM.channelsList.appendChild(document.getElementById('channels-empty'));
     return;
   }
 
