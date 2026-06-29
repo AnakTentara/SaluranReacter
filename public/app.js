@@ -66,6 +66,7 @@ const DOM = {
   debugReactAccount: document.getElementById('debug-react-account'),
   debugReactJid: document.getElementById('debug-react-jid'),
   debugReactMsgId: document.getElementById('debug-react-msgid'),
+  debugReactServerId: document.getElementById('debug-react-serverid'),
   debugReactEmoji: document.getElementById('debug-react-emoji'),
   btnDebugReact: document.getElementById('btn-debug-react'),
   debugReactResult: document.getElementById('debug-react-result'),
@@ -787,12 +788,13 @@ async function forceReact() {
   const accountId = DOM.debugReactAccount.value;
   const channelJid = DOM.debugReactJid.value.trim();
   const messageId = DOM.debugReactMsgId.value.trim();
+  const serverId = DOM.debugReactServerId.value.trim();
   const emoji = DOM.debugReactEmoji.value.trim();
   const resultEl = DOM.debugReactResult;
 
   if (!accountId || !channelJid || !messageId || !emoji) {
     resultEl.className = 'status-msg error';
-    resultEl.textContent = '❌ Semua field wajib diisi';
+    resultEl.textContent = '❌ ID Akun, Channel JID, Message ID, dan Emoji wajib diisi';
     return;
   }
 
@@ -804,13 +806,13 @@ async function forceReact() {
     const res = await fetch('/api/debug/send-reaction', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accountId, channelJid, messageId, emoji }),
+      body: JSON.stringify({ accountId, channelJid, messageId, serverId, emoji }),
     });
     const data = await res.json();
     if (data.ok) {
       resultEl.className = 'status-msg success';
       resultEl.textContent = `✅ ${data.message}`;
-      appendLog('success', `[ForceReact] ${emoji} sent from ${accountId} to msg ${messageId}`);
+      appendLog('success', `[ForceReact] ${emoji} sent from ${accountId} to msg ${messageId} (server_id: ${serverId || 'none'})`);
     } else {
       resultEl.className = 'status-msg error';
       resultEl.textContent = `❌ ${data.error}`;

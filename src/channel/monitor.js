@@ -216,11 +216,11 @@ async function processChannelPost(sock, msg, channel) {
     });
   }
 
-  // Queue reactions
+  // Queue reactions — for newsletter, serverId is msg.key.server_id (small integer like "103")
   if (reactor && aiResult.reactions?.length > 0) {
     const reacting = aiResult.reactions.filter((r) => r.shouldReact);
-    const serverId = msg.newsletterServerId || msg.message?.newsletterServerId || null;
-    
+    const serverId = msg.key?.server_id || msg.newsletterServerId || null;
+
     logger.info({ msgId, serverId }, 'Passing serverId to reactor');
     reactor.queueReactions(msgId, channel.id, msg.key, serverId, reacting);
     markPostReacted(msgId, reacting);
