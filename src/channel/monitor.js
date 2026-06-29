@@ -172,6 +172,7 @@ async function processChannelPost(sock, msg, channel) {
   // Download media if applicable
   let mediaBase64 = null;
   let mediaMimeType = null;
+  let mediaPath = null;
 
   if (['image', 'video', 'audio', 'sticker'].includes(contentType)) {
     try {
@@ -179,6 +180,7 @@ async function processChannelPost(sock, msg, channel) {
       if (media) {
         mediaBase64 = media.base64;
         mediaMimeType = media.mimeType;
+        mediaPath = media.filePath;
       }
     } catch (err) {
       logger.error({ err: err.message, msgId, contentType }, 'Media download failed, proceeding without media');
@@ -193,7 +195,7 @@ async function processChannelPost(sock, msg, channel) {
     contentType,
     textContent,
     caption,
-    mediaPath: null,
+    mediaPath,
   });
 
   // Get AI context

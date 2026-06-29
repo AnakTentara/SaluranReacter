@@ -82,7 +82,7 @@ const DOM = {
 
   // New Chat & Starred References
   chatHistoryBody: document.getElementById('chat-history-body'),
-  starredMediaGrid: document.getElementById('starred-media-grid'),
+  mediaGalleryGrid: document.getElementById('media-gallery-grid'),
   chatCountLabel: document.getElementById('chat-count-label'),
   btnRefreshChat: document.getElementById('btn-refresh-chat'),
 
@@ -126,6 +126,9 @@ window.addEventListener('DOMContentLoaded', async () => {
   // Load recent logs and debug messages from API
   loadRecentLogs();
   loadRecentDebugMessages();
+
+  // Initialize Lucide icons on static elements
+  lucide.createIcons();
 });
 
 // ── Navigation / Tabs ──────────────────────────────────────────────────────
@@ -232,7 +235,7 @@ function switchTab(tab) {
   } else if (tab === 'gallery') {
     renderChannelSelectors('gallery');
     if (state.selectedChannelIdForGallery) {
-      loadStarredGallery();
+      loadMediaGallery();
     } else {
       DOM.galleryEmptyView.style.display = 'flex';
       DOM.galleryActiveView.style.display = 'none';
@@ -453,6 +456,7 @@ function renderAccounts() {
 
   // Keep debug force-react dropdown in sync
   populateDebugAccountDropdown();
+  lucide.createIcons();
 }
 
 function renderChannels() {
@@ -482,6 +486,7 @@ function renderChannels() {
     `;
     DOM.channelsList.appendChild(item);
   });
+  lucide.createIcons();
 }
 
 // ── Rate Limit UI ──────────────────────────────────────────────────────────
@@ -1063,7 +1068,8 @@ async function loadChatHistory() {
   const channelId = state.selectedChannelIdForChat;
   if (!channelId) return;
 
-  DOM.chatHistoryBody.innerHTML = '<div class="empty-state">⏳ Memuat riwayat chat...</div>';
+  DOM.chatHistoryBody.innerHTML = '<div class="empty-state"><i data-lucide="loader-2" class="animate-spin" style="margin-bottom:12px;"></i><p>Memuat riwayat chat...</p></div>';
+  lucide.createIcons();
   try {
     const res = await fetch('/api/posts');
     const allPosts = await res.json();
@@ -1079,9 +1085,10 @@ async function loadChatHistory() {
     if (posts.length === 0) {
       DOM.chatHistoryBody.innerHTML = `
         <div class="empty-state">
-          <span>💬</span>
+          <i data-lucide="message-square" class="empty-state-icon"></i>
           <p>Belum ada postingan saluran. Aktifkan bot dan tunggu postingan baru.</p>
         </div>`;
+      lucide.createIcons();
       return;
     }
 
@@ -1101,7 +1108,9 @@ async function loadChatHistory() {
 
       const actionsHtml = `
         <div class="chat-bubble-actions">
-          <button class="chat-star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${encodeURIComponent(post.id)}')" title="${isStarred ? 'Batal Bintangi' : 'Bintangi (Simpan Permanen)'}">⭐</button>
+          <button class="chat-star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${encodeURIComponent(post.id)}')" title="${isStarred ? 'Batal Bintangi' : 'Bintangi (Simpan Permanen)'}">
+            <i data-lucide="star" style="width: 14px; height: 14px;"></i>
+          </button>
         </div>
       `;
 
@@ -1115,7 +1124,7 @@ async function loadChatHistory() {
         } else if (post.content_type === 'audio') {
           mediaHtml = `
             <div class="chat-bubble-audio">
-              <span class="audio-icon">🎤</span>
+              <span class="audio-icon"><i data-lucide="mic" style="width: 18px; height: 18px; color: var(--primary);"></i></span>
               <audio controls src="${mediaUrl}"></audio>
             </div>`;
         } else if (post.content_type === 'sticker') {
@@ -1163,6 +1172,7 @@ async function loadChatHistory() {
     });
 
     DOM.chatHistoryBody.appendChild(wrapper);
+    lucide.createIcons();
 
     // Auto-scroll chat body to the bottom
     setTimeout(() => {
@@ -1170,16 +1180,19 @@ async function loadChatHistory() {
     }, 100);
   } catch (err) {
     console.error('Failed to load chat history', err);
-    DOM.chatHistoryBody.innerHTML = `<div class="empty-state"><p style="color:var(--error)">Gagal memuat chat: ${err.message}</p></div>`;
+    DOM.chatHistoryBody.innerHTML = `<div class="empty-state"><i data-lucide="alert-triangle" style="color:var(--error); margin-bottom:12px;"></i><p style="color:var(--error)">Gagal memuat chat: ${err.message}</p></div>`;
+    lucide.createIcons();
   }
 }
 
 // ── Starred Media Gallery ────────────────────────────────────────────────────
-async function loadStarredGallery() {
+async function loadMediaGallery() {
   const channelId = state.selectedChannelIdForGallery;
   if (!channelId) return;
 
-  DOM.starredMediaGrid.innerHTML = '<div class="empty-state">⏳ Memuat galeri media...</div>';
+  DOM.mediaGalleryGrid.innerHTML = '<div class="empty-state"><i data-lucide="loader-2" class="animate-spin" style="margin-bottom:12px;"></i><p>Memuat galeri media...</p></div>';
+  lucide.createIcons();
+
   try {
     const res = await fetch('/api/posts');
     const allPosts = await res.json();
@@ -1190,19 +1203,20 @@ async function loadStarredGallery() {
     );
 
     if (posts.length === 0) {
-      DOM.starredMediaGrid.innerHTML = `
+      DOM.mediaGalleryGrid.innerHTML = `
         <div class="empty-state">
-          <span>🖼️</span>
+          <i data-lucide="image" class="empty-state-icon"></i>
           <p>Belum ada media (Foto/Video/Audio/Stiker) di saluran ini.</p>
         </div>`;
+      lucide.createIcons();
       return;
     }
 
-    DOM.starredMediaGrid.innerHTML = '';
+    DOM.mediaGalleryGrid.innerHTML = '';
     posts.forEach((post) => {
       const item = document.createElement('div');
-      item.className = 'starred-item';
-      item.setAttribute('data-starred-id', post.id);
+      item.className = 'media-gallery-card';
+      item.setAttribute('data-media-id', post.id);
 
       const dt = new Date(post.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
       const mediaUrl = `/media_cache/${post.id}_${post.content_type}`;
@@ -1210,36 +1224,46 @@ async function loadStarredGallery() {
 
       let mediaWrapperHtml = '';
       if (post.content_type === 'image' || post.content_type === 'sticker') {
-        mediaWrapperHtml = `<a href="${mediaUrl}" target="_blank"><img src="${mediaUrl}" alt="Starred Media" /></a>`;
+        mediaWrapperHtml = `<a href="${mediaUrl}" target="_blank"><img src="${mediaUrl}" alt="Media File" /></a>`;
       } else if (post.content_type === 'video') {
         mediaWrapperHtml = `<video src="${mediaUrl}" controls preload="metadata"></video>`;
       } else if (post.content_type === 'audio') {
         mediaWrapperHtml = `
-          <div style="padding: 20px; display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;">
-            <span style="font-size: 32px;">🎤 VN</span>
-            <audio controls src="${mediaUrl}" style="width:100%; height:32px;"></audio>
+          <div class="gallery-vn-container">
+            <div class="gallery-vn-icon-wrapper">
+              <i data-lucide="mic" style="width:24px; height:24px; color:var(--primary);"></i>
+              <span style="font-size:12px; font-weight:600; color:var(--text-muted);">VN</span>
+            </div>
+            <audio controls src="${mediaUrl}"></audio>
           </div>`;
       }
 
       item.innerHTML = `
-        <div class="starred-media-wrapper" style="position:relative;">
+        <div class="media-gallery-wrapper" style="position:relative;">
           ${mediaWrapperHtml}
-          <button class="starred-unstar-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${encodeURIComponent(post.id)}', true)" title="${isStarred ? 'Hapus dari Bintang' : 'Bintangi (Simpan Permanen)'}" style="color: ${isStarred ? '#f59e0b' : '#8696a0'}">⭐</button>
+          <button class="gallery-star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${encodeURIComponent(post.id)}', true)" title="${isStarred ? 'Hapus dari Bintang' : 'Bintangi (Simpan Permanen)'}" style="color: ${isStarred ? '#f59e0b' : '#8696a0'}">
+            <i data-lucide="star" style="width:16px; height:16px;"></i>
+          </button>
         </div>
-        <div class="starred-info">
-          <div class="starred-caption">${escapeHtml(post.caption || post.text_content || `[Berkas ${post.content_type.toUpperCase()}]`)}</div>
-          <div class="starred-meta">
+        <div class="media-gallery-info">
+          <div class="media-gallery-caption">${escapeHtml(post.caption || post.text_content || `[Berkas ${post.content_type.toUpperCase()}]`)}</div>
+          <div class="media-gallery-meta">
             <span>Tipe: <strong>${post.content_type.toUpperCase()}</strong></span>
             <span>${dt}</span>
           </div>
         </div>
       `;
 
-      DOM.starredMediaGrid.appendChild(item);
+      DOM.mediaGalleryGrid.appendChild(item);
     });
+
+    // Render all icons inside cards
+    lucide.createIcons();
+
   } catch (err) {
-    console.error('Failed to load starred gallery', err);
-    DOM.starredMediaGrid.innerHTML = `<div class="empty-state"><p style="color:var(--error)">Gagal memuat galeri: ${err.message}</p></div>`;
+    console.error('Failed to load media gallery', err);
+    DOM.mediaGalleryGrid.innerHTML = `<div class="empty-state"><i data-lucide="alert-triangle" style="color:var(--error); margin-bottom:12px;"></i><p style="color:var(--error)">Gagal memuat galeri: ${err.message}</p></div>`;
+    lucide.createIcons();
   }
 }
 
@@ -1251,7 +1275,7 @@ window.toggleStar = async function (id, fromGallery = false) {
     if (data.ok) {
       if (fromGallery) {
         // If from media gallery, update gallery and obrolan bubble (if loaded)
-        loadStarredGallery();
+        loadMediaGallery();
         const bubble = document.querySelector(`[data-post-id="${decodeURIComponent(id)}"]`);
         if (bubble) {
           const starBtn = bubble.querySelector('.chat-star-btn');
@@ -1334,7 +1358,7 @@ function selectChannelForGallery(id, name) {
   DOM.galleryActiveView.style.display = 'flex';
   DOM.activeGalleryTitle.textContent = `🖼️ Album Media ${name || 'Saluran'}`;
 
-  loadStarredGallery();
+  loadMediaGallery();
 }
 
 // ── Starred Messages Drawer ──────────────────────────────────────────────────
@@ -1342,7 +1366,8 @@ async function loadStarredDrawer() {
   const channelId = state.selectedChannelIdForChat;
   if (!channelId) return;
 
-  DOM.starredDrawerBody.innerHTML = '<div class="empty-state">⏳ Memuat pesan berbintang...</div>';
+  DOM.starredDrawerBody.innerHTML = '<div class="empty-state"><i data-lucide="loader-2" class="animate-spin" style="margin-bottom:12px;"></i><p>Memuat pesan berbintang...</p></div>';
+  lucide.createIcons();
   try {
     const res = await fetch('/api/posts/starred');
     const starredPosts = await res.json();
@@ -1353,9 +1378,10 @@ async function loadStarredDrawer() {
     if (posts.length === 0) {
       DOM.starredDrawerBody.innerHTML = `
         <div class="empty-state">
-          <span>⭐</span>
+          <i data-lucide="star" class="empty-state-icon"></i>
           <p>Belum ada pesan berbintang di saluran ini.</p>
         </div>`;
+      lucide.createIcons();
       return;
     }
 
@@ -1373,14 +1399,16 @@ async function loadStarredDrawer() {
           <span>${dt}</span>
         </div>
         <div class="drawer-card-body">${escapeHtml(preview)}</div>
-        <button class="btn btn-ghost btn-xs" onclick="toggleStar('${encodeURIComponent(post.id)}')" style="align-self: flex-end; padding:2px 8px; font-size:11px; margin-top:4px;">❌ Batal Bintang</button>
+        <button class="btn btn-ghost btn-xs btn-flex" onclick="toggleStar('${encodeURIComponent(post.id)}')" style="align-self: flex-end; padding:2px 8px; font-size:11px; margin-top:4px;"><i data-lucide="star-off" style="width:11px; height:11px;"></i> Batal Bintang</button>
       `;
 
       DOM.starredDrawerBody.appendChild(card);
     });
+    lucide.createIcons();
   } catch (err) {
     console.error('Failed to load starred drawer', err);
-    DOM.starredDrawerBody.innerHTML = '<div class="empty-state"><p style="color:var(--error)">Gagal memuat</p></div>';
+    DOM.starredDrawerBody.innerHTML = '<div class="empty-state"><i data-lucide="alert-triangle" style="color:var(--error); margin-bottom:12px;"></i><p style="color:var(--error)">Gagal memuat</p></div>';
+    lucide.createIcons();
   }
 }
 

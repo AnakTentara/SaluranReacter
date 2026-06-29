@@ -7,45 +7,48 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div id="app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <div class="sidebar-header">
         <div class="logo">
-          <span class="logo-icon">🤖</span>
+          <i data-lucide="bot" style="font-size: 24px; color: var(--primary);"></i>
           <span class="logo-text">WA Reactor</span>
         </div>
-        <button id="btn-toggle-sidebar" class="sidebar-toggle-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">☰</button>
+        <button id="btn-toggle-sidebar" class="sidebar-toggle-btn">
+          <i data-lucide="menu" style="width: 18px; height: 18px;"></i>
+        </button>
       </div>
       <nav class="nav">
         <button class="nav-btn active" data-tab="accounts" id="nav-accounts">
-          <span class="nav-icon">📱</span>
+          <i data-lucide="smartphone" class="nav-icon-svg"></i>
           <span>Akun Bot</span>
         </button>
         <button class="nav-btn" data-tab="chat" id="nav-chat">
-          <span class="nav-icon">💬</span>
+          <i data-lucide="message-square" class="nav-icon-svg"></i>
           <span>Obrolan Saluran</span>
         </button>
         <button class="nav-btn" data-tab="gallery" id="nav-gallery">
-          <span class="nav-icon">🖼️</span>
+          <i data-lucide="image" class="nav-icon-svg"></i>
           <span>Galeri</span>
         </button>
         <button class="nav-btn" data-tab="channels" id="nav-channels">
-          <span class="nav-icon">📡</span>
+          <i data-lucide="rss" class="nav-icon-svg"></i>
           <span>Saluran</span>
         </button>
         <button class="nav-btn" data-tab="settings" id="nav-settings">
-          <span class="nav-icon">⚙️</span>
+          <i data-lucide="settings" class="nav-icon-svg"></i>
           <span>Pengaturan</span>
         </button>
         <button class="nav-btn" data-tab="log" id="nav-log">
-          <span class="nav-icon">📋</span>
+          <i data-lucide="terminal" class="nav-icon-svg"></i>
           <span>Log Aktivitas</span>
         </button>
         <button class="nav-btn" data-tab="debug" id="nav-debug">
-          <span class="nav-icon">🐛</span>
+          <i data-lucide="bug" class="nav-icon-svg"></i>
           <span>Debug Pesan</span>
         </button>
       </nav>
@@ -85,7 +88,7 @@
           <!-- Account cards rendered by JS -->
         </div>
         <div class="empty-state" id="accounts-empty" style="display: none;">
-          <span>📱</span>
+          <i data-lucide="smartphone" class="empty-state-icon"></i>
           <p>Belum ada akun. Klik "Tambah Akun" untuk mulai.</p>
         </div>
       </div>
@@ -105,19 +108,19 @@
           <!-- Right Pane (Feed Obrolan) -->
           <div class="chat-feed-pane" style="flex-grow: 1; display: flex; flex-direction: column; height: 100%; position: relative;">
             <div class="chat-pane-empty-state" id="chat-empty-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); padding: 40px; text-align: center;">
-              <span style="font-size: 48px; margin-bottom: 16px;">💬</span>
+              <i data-lucide="message-square" class="empty-state-icon"></i>
               <h3>Belum Ada Saluran yang Dipilih</h3>
               <p style="max-width: 320px; font-size: 13px; margin-top: 8px; color: var(--text-muted);">Silakan pilih salah satu saluran dari daftar di sebelah kiri untuk melihat riwayat postingan.</p>
             </div>
             <div class="chat-container-wrapper" id="chat-active-view" style="display: none; flex-direction: column; height: 100%; width: 100%;">
-              <div class="chat-pane-header" style="background-color: #202c33; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+              <div class="chat-pane-header" style="background-color: #161c24; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
                 <div style="display:flex; flex-direction:column;">
                   <span class="chat-title" id="active-chat-title">Feed Saluran</span>
                   <span class="chat-subtitle" id="chat-count-label">0 Postingan Tersimpan</span>
                 </div>
                 <div style="display:flex; gap:10px;">
-                  <button class="btn btn-primary btn-sm" id="btn-open-starred-drawer" style="padding: 6px 12px; font-size: 12px;">⭐ Pesan Berbintang</button>
-                  <button class="btn btn-ghost btn-sm" id="btn-refresh-chat" style="padding: 6px 12px; font-size: 12px;">🔄 Refresh</button>
+                  <button class="btn btn-primary btn-sm btn-flex" id="btn-open-starred-drawer" style="padding: 6px 12px; font-size: 12px;"><i data-lucide="star" style="width: 14px; height: 14px;"></i> Pesan Berbintang</button>
+                  <button class="btn btn-ghost btn-sm btn-flex" id="btn-refresh-chat" style="padding: 6px 12px; font-size: 12px;"><i data-lucide="refresh-cw" style="width: 14px; height: 14px;"></i> Refresh</button>
                 </div>
               </div>
               <div class="chat-body" id="chat-history-body" style="flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
@@ -143,7 +146,7 @@
           <!-- Right Pane (Grid Media) -->
           <div class="media-gallery-pane" style="flex-grow: 1; display: flex; flex-direction: column; height: 100%; padding: 20px; overflow-y: auto; width: 100%;">
             <div class="chat-pane-empty-state" id="gallery-empty-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center;">
-              <span style="font-size: 48px; margin-bottom: 16px;">🖼️</span>
+              <i data-lucide="image" class="empty-state-icon"></i>
               <h3>Belum Ada Saluran yang Dipilih</h3>
               <p style="max-width: 320px; font-size: 13px; margin-top: 8px; color: var(--text-muted);">Pilih salah satu saluran dari daftar di sebelah kiri untuk melihat album media (foto, video, VN, stiker).</p>
             </div>
@@ -152,7 +155,7 @@
                 <h1 id="active-gallery-title" style="margin:0;">Galeri Media Saluran</h1>
               </div>
               <p class="settings-desc" style="margin-bottom: 20px;">Menampilkan semua media (Foto, Video, Voice Note, Stiker) yang pernah dikirim oleh saluran ini. Klik ⭐ untuk mem-bookmark agar aman selamanya.</p>
-              <div class="starred-grid" id="starred-media-grid">
+              <div class="media-gallery-grid" id="media-gallery-grid">
                 <!-- Item media terisi di sini -->
               </div>
             </div>
@@ -167,14 +170,14 @@
           <button class="btn btn-primary" id="btn-add-channel">+ Tambah Saluran</button>
         </div>
         <div class="info-box" id="debug-mode-notice" style="display:none">
-          🐛 <strong>Debug Mode Aktif</strong> — Semua pesan WA yang masuk akan di-log. 
+          <i data-lucide="bug" style="width: 16px; height: 16px; margin-right: 8px; vertical-align: middle;"></i> <strong>Debug Mode Aktif</strong> — Semua pesan WA yang masuk akan di-log. 
           Minta pacar posting sesuatu, lalu lihat tab "Debug Pesan" untuk menemukan ID salurannya.
         </div>
         <div id="channels-list" class="channels-list">
           <!-- Channels list rendered by JS -->
         </div>
         <div class="empty-state" id="channels-empty" style="display: none;">
-          <span>📡</span>
+          <i data-lucide="rss" class="empty-state-icon"></i>
           <p>Belum ada saluran. Tambahkan ID saluran WhatsApp pacarmu di sini.</p>
         </div>
       </div>
@@ -186,7 +189,7 @@
         </div>
         <div class="settings-cards">
           <div class="settings-card">
-            <h2>🔑 Gemini API Keys (Rotating)</h2>
+            <h2><i data-lucide="key" class="settings-card-icon"></i> Gemini API Keys (Rotating)</h2>
             <p class="settings-desc">Masukkan API key dari <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>. Anda bisa memasukkan <strong>banyak API key</strong> (satu per baris atau dipisahkan koma) untuk merotasi pemakaian limit RPM/TPD agar tidak mudah terkena error 429.</p>
             <div class="form-group">
               <textarea id="input-apikey" rows="4" placeholder="AIzaSy...&#10;AIzaSy...&#10;AIzaSy..." class="input" style="font-family: var(--font-mono); font-size: 13px; resize: vertical;" autocomplete="off"></textarea>
@@ -196,7 +199,7 @@
           </div>
 
           <div class="settings-card">
-            <h2>⏱️ Interval Polling</h2>
+            <h2><i data-lucide="clock" class="settings-card-icon"></i> Interval Polling</h2>
             <p class="settings-desc">Seberapa sering bot cek postingan baru (60–180 detik).</p>
             <div class="input-row">
               <input type="number" id="input-polling" min="60" max="180" placeholder="120" class="input input-sm" />
@@ -206,7 +209,7 @@
           </div>
 
           <div class="settings-card">
-            <h2>🐛 Debug Mode</h2>
+            <h2><i data-lucide="bug" class="settings-card-icon"></i> Debug Mode</h2>
             <p class="settings-desc">Aktifkan untuk melihat semua pesan WA masuk (berguna untuk menemukan channel ID).</p>
             <label class="toggle-label">
               <input type="checkbox" id="toggle-debug" class="toggle-input" />
@@ -216,7 +219,7 @@
           </div>
 
           <div class="settings-card">
-            <h2>🌙 Jam Tidur (Silent Hours)</h2>
+            <h2><i data-lucide="moon" class="settings-card-icon"></i> Jam Tidur (Silent Hours)</h2>
             <p class="settings-desc">Perlambat respons bot pada waktu tertentu (menggunakan zona waktu WIB Asia/Jakarta) untuk mensimulasikan waktu tidur manusia normal.</p>
             <div class="form-row" style="display:flex; gap:12px; margin-bottom:12px;">
               <div class="form-group" style="flex:1;">
@@ -236,9 +239,9 @@
           </div>
 
           <div class="settings-card">
-            <h2>💾 Backup Data & Sesi Bot</h2>
+            <h2><i data-lucide="hard-drive" class="settings-card-icon"></i> Backup Data & Sesi Bot</h2>
             <p class="settings-desc">Unduh berkas konfigurasi, database log reaksi, beserta sesi login WhatsApp bot yang sudah tersambung. Gunakan berkas ini untuk memulihkan bot jika server di-install ulang.</p>
-            <a href="/api/backup" target="_blank" class="btn btn-ghost btn-full" style="display: block; text-align: center; text-decoration: none; padding: 12px 0; font-weight: bold; border: 2px dashed var(--border);">📥 Unduh Backup (.zip)</a>
+            <a href="/api/backup" target="_blank" class="btn btn-ghost btn-full btn-flex" style="display: flex; text-align: center; text-decoration: none; padding: 12px 0; font-weight: bold; border: 2px dashed var(--border);"><i data-lucide="download"></i> Unduh Backup (.zip)</a>
           </div>
         </div>
       </div>
@@ -250,7 +253,7 @@
           <button class="btn btn-ghost" id="btn-clear-log">Bersihkan</button>
         </div>
         <div id="log-list" class="log-list">
-          <div class="empty-state"><span>📋</span><p>Belum ada log.</p></div>
+          <div class="empty-state"><i data-lucide="terminal" class="empty-state-icon"></i><p>Belum ada log.</p></div>
         </div>
       </div>
 
@@ -263,8 +266,8 @@
         <p class="debug-hint">Minta pacarmu posting sesuatu di salurannya. JID yang muncul di bawah adalah ID salurannya. Copy JID tersebut ke tab "Saluran".</p>
 
         <!-- Force React Test Panel -->
-        <div class="settings-card" style="margin-bottom: 24px; border-color: rgba(245, 158, 11, 0.3);">
-          <h2>🧪 Force React Debug</h2>
+        <div class="settings-card" style="margin-bottom: 24px; border-color: rgba(124, 58, 237, 0.3);">
+          <h2><i data-lucide="flask-conical" class="settings-card-icon" style="color: var(--primary);"></i> Force React Debug</h2>
           <p class="settings-desc">Paksa kirim reaction ke pesan tertentu secara manual. Gunakan ini untuk test apakah newsletter reaction berfungsi.</p>
           <div class="form-row" style="flex-wrap: wrap; gap: 12px;">
             <div class="form-group" style="flex: 1; min-width: 120px;">
@@ -288,7 +291,7 @@
               <input type="text" id="debug-react-emoji" placeholder="👋" class="input" value="👋" style="font-size: 18px;" />
             </div>
             <div class="form-group" style="align-self: flex-end;">
-              <button class="btn btn-primary" id="btn-debug-react">🚀 Send React</button>
+              <button class="btn btn-primary btn-flex" id="btn-debug-react"><i data-lucide="send" style="width: 14px; height: 14px;"></i> Send React</button>
             </div>
           </div>
           <div id="debug-react-result" class="status-msg" style="margin-top: 8px;"></div>
@@ -449,12 +452,12 @@
   <div class="drawer-overlay" id="starred-drawer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 1000;">
     <div class="drawer-content" id="starred-drawer-content" style="position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background-color: var(--bg-card); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); transition: right 0.3s ease; display: flex; flex-direction: column; z-index: 1001;">
       <div class="drawer-header" style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sidebar);">
-        <h2 style="font-size: 16px; margin: 0; display:flex; align-items:center; gap:8px;">⭐ Pesan Berbintang</h2>
+        <h2 style="font-size: 16px; margin: 0; display:flex; align-items:center; gap:8px;"><i data-lucide="star" style="width: 18px; height: 18px; color: var(--warning);"></i> Pesan Berbintang</h2>
         <button class="modal-close" id="btn-close-starred-drawer" style="cursor:pointer; background:none; border:none; color:var(--text-muted); font-size:18px;">✕</button>
       </div>
       <div class="drawer-body" id="starred-drawer-body" style="flex-grow: 1; overflow-y: auto; padding: 16px; display:flex; flex-direction:column; gap:12px;">
         <div class="empty-state">
-          <span>⭐</span>
+          <i data-lucide="star" class="empty-state-icon"></i>
           <p>Belum ada pesan berbintang di saluran ini.</p>
         </div>
       </div>

@@ -4,7 +4,7 @@ import { createServer } from 'http';
 import { Server as SocketIO } from 'socket.io';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { existsSync, mkdirSync } from 'fs';
+import { existsSync, mkdirSync, readFileSync } from 'fs';
 
 import logger from './utils/logger.js';
 import { initDB } from './utils/db.js';
@@ -39,7 +39,29 @@ const io = new SocketIO(httpServer, { cors: { origin: '*' } });
 // ── Middleware ───────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(express.static(PUBLIC_DIR));
-app.use('/media_cache', express.static(join(ROOT, 'data', 'media_cache')));
+// Serves cached media files using metadata to set correct MIME type headers
+app.get('/media_cache/:filename', (req, res) => {
+  const { filename } = req.params;
+  const filePath = join(ROOT, 'data', 'media_cache', filename);
+  const metaPath = filePath + '.json';
+
+  if (!existsSync(filePath)) {
+    return res.status(404).send('File not found');
+  }
+
+  let mimeType = 'application/octet-stream';
+  if (existsSync(metaPath)) {
+    try {
+      const meta = JSON.parse(readFileSync(metaPath, 'utf-8'));
+      mimeType = meta.mimeType || mimeType;
+    } catch (e) {
+      logger.error({ err: e.message }, 'Failed to parse media metadata');
+    }
+  }
+
+  res.setHeader('Content-Type', mimeType);
+  res.sendFile(filePath);
+});
 
 // ── Bot Setup ────────────────────────────────────────────────────────────────
 const botManager = new BotManager(io);
