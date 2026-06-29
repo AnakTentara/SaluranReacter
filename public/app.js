@@ -61,6 +61,14 @@ const DOM = {
   // Clear logs/debug
   btnClearLog: document.getElementById('btn-clear-log'),
   btnClearDebug: document.getElementById('btn-clear-debug'),
+
+  // Debug Force React
+  debugReactAccount: document.getElementById('debug-react-account'),
+  debugReactJid: document.getElementById('debug-react-jid'),
+  debugReactMsgId: document.getElementById('debug-react-msgid'),
+  debugReactEmoji: document.getElementById('debug-react-emoji'),
+  btnDebugReact: document.getElementById('btn-debug-react'),
+  debugReactResult: document.getElementById('debug-react-result'),
 };
 
 // ── Init App ───────────────────────────────────────────────────────────────
@@ -113,6 +121,9 @@ function setupEventListeners() {
     appendLog('info', 'Logs cleared locally');
   });
   DOM.btnClearDebug.addEventListener('click', clearDebugLogs);
+
+  // Force React Debug
+  document.getElementById('btn-debug-react').addEventListener('click', forceReact);
 }
 
 function switchTab(tab) {
@@ -303,6 +314,9 @@ function renderAccounts() {
 
     DOM.accountsGrid.appendChild(card);
   });
+
+  // Keep debug force-react dropdown in sync
+  populateDebugAccountDropdown();
 }
 
 function renderChannels() {
@@ -757,6 +771,55 @@ async function clearDebugLogs() {
     appendLog('info', 'Debug messages cleared from database');
   } catch (err) {
     appendLog('error', 'Gagal membersihkan debug messages');
+  }
+}
+
+// ── Force React Debug ───────────────────────────────────────────────────────
+function populateDebugAccountDropdown() {
+  if (!DOM.debugReactAccount) return;
+  const connected = state.accounts.filter((a) => a.status === 'connected');
+  DOM.debugReactAccount.innerHTML = connected.length
+    ? connected.map((a) => `<option value="${escapeHtml(a.id)}">${escapeHtml(a.name)} (${escapeHtml(a.id)})</option>`).join('')
+    : '<option value="">— Tidak ada akun terhubung —</option>';
+}
+
+async function forceReact() {
+  const accountId = DOM.debugReactAccount.value;
+  const channelJid = DOM.debugReactJid.value.trim();
+  const messageId = DOM.debugReactMsgId.value.trim();
+  const emoji = DOM.debugReactEmoji.value.trim();
+  const resultEl = DOM.debugReactResult;
+
+  if (!accountId || !channelJid || !messageId || !emoji) {
+    resultEl.className = 'status-msg error';
+    resultEl.textContent = '❌ Semua field wajib diisi';
+    return;
+  }
+
+  DOM.btnDebugReact.disabled = true;
+  resultEl.className = 'status-msg';
+  resultEl.textContent = '⏳ Mengirim reaction...';
+
+  try {
+    const res = await fetch('/api/debug/send-reaction', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ accountId, channelJid, messageId, emoji }),
+    });
+    const data = await res.json();
+    if (data.ok) {
+      resultEl.className = 'status-msg success';
+      resultEl.textContent = `✅ ${data.message}`;
+      appendLog('success', `[ForceReact] ${emoji} sent from ${accountId} to msg ${messageId}`);
+    } else {
+      resultEl.className = 'status-msg error';
+      resultEl.textContent = `❌ ${data.error}`;
+    }
+  } catch (err) {
+    resultEl.className = 'status-msg error';
+    resultEl.textContent = `❌ Network error: ${err.message}`;
+  } finally {
+    DOM.btnDebugReact.disabled = false;
   }
 }
 

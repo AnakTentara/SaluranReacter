@@ -65,5 +65,30 @@ export default function statusRouter(botManager, reactor) {
     res.json({ ok: true, message: 'Debug messages cleared' });
   });
 
+  // ── Debug: Force send a reaction ─────────────────────────────────────────
+  router.post('/debug/send-reaction', async (req, res) => {
+    const { accountId, channelJid, messageId, emoji } = req.body;
+
+    if (!accountId || !channelJid || !messageId || !emoji) {
+      return res.status(400).json({ ok: false, error: 'accountId, channelJid, messageId, and emoji are required' });
+    }
+
+    const session = botManager.getSession(accountId);
+    if (!session) return res.status(404).json({ ok: false, error: `Account '${accountId}' not found` });
+    if (session.status !== 'connected') return res.status(400).json({ ok: false, error: `Account '${accountId}' is not connected (status: ${session.status})` });
+
+    const messageKey = { remoteJid: channelJid, fromMe: false, id: messageId };
+    
+    try {
+      // Try with messageId as serverId directly
+      logger.info({ accountId, channelJid, messageId, emoji }, '[DEBUG] Force sending reaction');
+      await session.sendReaction(channelJid, messageKey, messageId, emoji);
+      res.json({ ok: true, message: `Reaction ${emoji} sent from ${accountId} to ${channelJid} for message ${messageId}` });
+    } catch (err) {
+      logger.error({ err: err.message }, '[DEBUG] Force send reaction failed');
+      res.status(500).json({ ok: false, error: err.message });
+    }
+  });
+
   return router;
 }

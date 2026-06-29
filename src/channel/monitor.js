@@ -73,6 +73,21 @@ export async function handleIncomingMessage(sock, messages) {
     const channel = enabledChannels.find((c) => c.id === jid);
     if (!channel) continue;
 
+    // Log ALL top-level fields of newsletter msg to find serverId location
+    logger.info({
+      msgId: msg.key?.id,
+      newsletterServerId: msg.newsletterServerId,
+      msgFields: Object.keys(msg),
+      keyFields: Object.keys(msg.key || {}),
+      rawMsg: JSON.stringify({
+        key: msg.key,
+        newsletterServerId: msg.newsletterServerId,
+        messageStubType: msg.messageStubType,
+        messageStubParameters: msg.messageStubParameters,
+        messageTimestamp: msg.messageTimestamp,
+      }),
+    }, '[DEBUG] Full newsletter msg structure');
+
     // Process this as a channel post
     await processChannelPost(sock, msg, channel);
   }

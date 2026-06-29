@@ -148,6 +148,35 @@
           <button class="btn btn-ghost" id="btn-clear-debug">Bersihkan</button>
         </div>
         <p class="debug-hint">Minta pacarmu posting sesuatu di salurannya. JID yang muncul di bawah adalah ID salurannya. Copy JID tersebut ke tab "Saluran".</p>
+
+        <!-- Force React Test Panel -->
+        <div class="settings-card" style="margin-bottom: 24px; border-color: rgba(245, 158, 11, 0.3);">
+          <h2>🧪 Force React Debug</h2>
+          <p class="settings-desc">Paksa kirim reaction ke pesan tertentu secara manual. Gunakan ini untuk test apakah newsletter reaction berfungsi.</p>
+          <div class="form-row" style="flex-wrap: wrap; gap: 12px;">
+            <div class="form-group" style="flex: 1; min-width: 120px;">
+              <label>Akun Bot</label>
+              <select id="debug-react-account" class="input"></select>
+            </div>
+            <div class="form-group" style="flex: 2; min-width: 180px;">
+              <label>Channel JID</label>
+              <input type="text" id="debug-react-jid" placeholder="120363XXXXX@newsletter" class="input" />
+            </div>
+            <div class="form-group" style="flex: 2; min-width: 180px;">
+              <label>Message ID</label>
+              <input type="text" id="debug-react-msgid" placeholder="AC2CDF710C082FD5735E41883E71AFBA" class="input" />
+            </div>
+            <div class="form-group" style="flex: 0.5; min-width: 80px;">
+              <label>Emoji</label>
+              <input type="text" id="debug-react-emoji" placeholder="👋" class="input" value="👋" style="font-size: 18px;" />
+            </div>
+            <div class="form-group" style="align-self: flex-end;">
+              <button class="btn btn-primary" id="btn-debug-react">🚀 Send React</button>
+            </div>
+          </div>
+          <div id="debug-react-result" class="status-msg" style="margin-top: 8px;"></div>
+        </div>
+
         <div id="debug-table-wrapper">
           <table class="debug-table" id="debug-table">
             <thead>
