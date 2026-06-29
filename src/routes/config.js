@@ -47,6 +47,7 @@ export default function configRouter(botManager, io) {
     } catch (err) {
       res.status(400).json({ ok: false, error: err.message });
     }
+  });
   // ── PATCH config (generic config updater) ───────────────────────────────
   router.patch('/config', (req, res) => {
     try {
