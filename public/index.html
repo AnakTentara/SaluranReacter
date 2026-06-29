@@ -99,11 +99,11 @@
         </div>
         <div class="settings-cards">
           <div class="settings-card">
-            <h2>🔑 Gemini API Key</h2>
-            <p class="settings-desc">Masukkan API key dari <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>. Key akan diverifikasi sebelum disimpan.</p>
-            <div class="input-row">
-              <input type="password" id="input-apikey" placeholder="AIzaSy..." class="input" autocomplete="off" />
-              <button class="btn btn-primary" id="btn-save-apikey">Simpan & Verifikasi</button>
+            <h2>🔑 Gemini API Keys (Rotating)</h2>
+            <p class="settings-desc">Masukkan API key dari <a href="https://aistudio.google.com/apikey" target="_blank">Google AI Studio</a>. Anda bisa memasukkan <strong>banyak API key</strong> (satu per baris atau dipisahkan koma) untuk merotasi pemakaian limit RPM/TPD agar tidak mudah terkena error 429.</p>
+            <div class="form-group">
+              <textarea id="input-apikey" rows="4" placeholder="AIzaSy...&#10;AIzaSy...&#10;AIzaSy..." class="input" style="font-family: var(--font-mono); font-size: 13px; resize: vertical;" autocomplete="off"></textarea>
+              <button class="btn btn-primary btn-full" id="btn-save-apikey" style="margin-top: 10px;">Simpan & Verifikasi Semua Key</button>
             </div>
             <div id="apikey-status" class="status-msg"></div>
           </div>

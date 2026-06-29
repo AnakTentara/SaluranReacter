@@ -8,6 +8,7 @@ const CONFIG_PATH = join(__dirname, '..', '..', 'config.json');
 
 const DEFAULT_CONFIG = {
   geminiApiKey: '',
+  geminiApiKeys: [],
   pollingIntervalSeconds: 120,
   debugMode: true,
   channels: [],
@@ -20,7 +21,14 @@ export function loadConfig() {
   try {
     if (existsSync(CONFIG_PATH)) {
       const raw = readFileSync(CONFIG_PATH, 'utf-8');
-      _config = { ...DEFAULT_CONFIG, ...JSON.parse(raw) };
+      const parsed = JSON.parse(raw);
+      
+      // Auto-migrate legacy string apiKey to array geminiApiKeys
+      if (parsed.geminiApiKey && (!parsed.geminiApiKeys || parsed.geminiApiKeys.length === 0)) {
+        parsed.geminiApiKeys = [parsed.geminiApiKey.trim()];
+      }
+      
+      _config = { ...DEFAULT_CONFIG, ...parsed };
     } else {
       _config = { ...DEFAULT_CONFIG };
       saveConfig();

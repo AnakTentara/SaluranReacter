@@ -225,7 +225,11 @@ async function fetchConfig() {
     state.channels = state.config.channels;
 
     // Prefill settings inputs
-    DOM.inputApikey.value = state.config.geminiApiKeySet ? '********' : '';
+    if (state.config.geminiApiKeys && state.config.geminiApiKeys.length > 0) {
+      DOM.inputApikey.value = state.config.geminiApiKeys.join('\n');
+    } else {
+      DOM.inputApikey.value = state.config.geminiApiKeySet ? '********' : '';
+    }
     DOM.inputPolling.value = state.config.pollingIntervalSeconds;
     DOM.toggleDebug.checked = state.config.debugMode;
     DOM.toggleDebugText.textContent = state.config.debugMode ? 'Aktif' : 'Nonaktif';
@@ -387,7 +391,7 @@ async function saveApiKey() {
 
   DOM.btnSaveApikey.disabled = true;
   DOM.apikeyStatus.className = 'status-msg';
-  DOM.apikeyStatus.textContent = 'Verifikasi API key...';
+  DOM.apikeyStatus.textContent = '⏳ Memverifikasi semua API key (bisa memakan waktu)...';
 
   try {
     const res = await fetch('/api/config/apikey', {
@@ -398,11 +402,11 @@ async function saveApiKey() {
     const result = await res.json();
     if (result.ok) {
       DOM.apikeyStatus.className = 'status-msg success';
-      DOM.apikeyStatus.textContent = '✅ API Key valid dan berhasil disimpan';
+      DOM.apikeyStatus.innerHTML = result.message.replace(/\n/g, '<br>');
       await refreshAll();
     } else {
       DOM.apikeyStatus.className = 'status-msg error';
-      DOM.apikeyStatus.textContent = `❌ ${result.error}`;
+      DOM.apikeyStatus.innerHTML = `❌ ${result.error.replace(/\n/g, '<br>')}`;
     }
   } catch (err) {
     DOM.apikeyStatus.className = 'status-msg error';

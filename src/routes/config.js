@@ -21,11 +21,15 @@ export default function configRouter(botManager, io) {
   // ── GET full config ──────────────────────────────────────────────────────
   router.get('/config', (req, res) => {
     const cfg = getConfig();
-    // Mask API key in response
+    
+    // Mask all API keys in response
+    const maskedKeys = (cfg.geminiApiKeys || []).map(k => k ? `${k.slice(0, 8)}...` : '');
+    
     res.json({
       ...cfg,
       geminiApiKey: cfg.geminiApiKey ? `${cfg.geminiApiKey.slice(0, 8)}...` : '',
-      geminiApiKeySet: !!cfg.geminiApiKey,
+      geminiApiKeys: maskedKeys,
+      geminiApiKeySet: (cfg.geminiApiKeys && cfg.geminiApiKeys.length > 0) || !!cfg.geminiApiKey,
     });
   });
 
@@ -45,20 +49,50 @@ export default function configRouter(botManager, io) {
     }
   });
 
-  // ── SET API key ──────────────────────────────────────────────────────────
+  // ── SET API keys ──────────────────────────────────────────────────────────
   router.post('/config/apikey', async (req, res) => {
     try {
       const { apiKey } = req.body;
       if (!apiKey || typeof apiKey !== 'string') {
-        return res.status(400).json({ ok: false, error: 'apiKey is required' });
+        return res.status(400).json({ ok: false, error: 'API key(s) are required' });
       }
-      // Test the key first
-      const test = await testApiKey(apiKey.trim());
-      if (!test.ok) {
-        return res.status(400).json({ ok: false, error: `Invalid API key: ${test.error}` });
+
+      // Split keys by comma or newlines
+      const rawKeys = apiKey.split(/[\n,]+/).map(k => k.trim()).filter(Boolean);
+      if (rawKeys.length === 0) {
+        return res.status(400).json({ ok: false, error: 'No valid API keys found' });
       }
-      saveConfig({ geminiApiKey: apiKey.trim() });
-      res.json({ ok: true, message: 'API key saved and verified' });
+
+      logger.info({ count: rawKeys.length }, 'Verifying API keys...');
+      
+      // Verify each API key
+      const verifiedKeys = [];
+      const errors = [];
+      
+      for (let i = 0; i < rawKeys.length; i++) {
+        const key = rawKeys[i];
+        const test = await testApiKey(key);
+        if (test.ok) {
+          verifiedKeys.push(key);
+        } else {
+          errors.push(`Key #${i+1} failed: ${test.error}`);
+        }
+      }
+
+      if (verifiedKeys.length === 0) {
+        return res.status(400).json({ ok: false, error: `All provided API keys are invalid: \n${errors.join('\n')}` });
+      }
+
+      saveConfig({
+        geminiApiKey: verifiedKeys[0], // for legacy compatibility
+        geminiApiKeys: verifiedKeys
+      });
+
+      const msg = errors.length > 0 
+        ? `Berhasil memverifikasi ${verifiedKeys.length} key. Gagal: \n${errors.join('\n')}`
+        : `Semua ${verifiedKeys.length} API key berhasil diverifikasi dan disimpan!`;
+
+      res.json({ ok: true, message: msg, warning: errors.length > 0 ? errors : null });
     } catch (err) {
       res.status(500).json({ ok: false, error: err.message });
     }
