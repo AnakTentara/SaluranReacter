@@ -37,8 +37,9 @@ export async function analyzePost(post, contextPosts, accounts) {
     throw new Error('Gemini API key not configured. Set at least one in the dashboard settings.');
   }
 
-  // Wait if local rate limit would be hit
-  await waitForRateLimit(ESTIMATED_TOKENS);
+  // Wait if local rate limit would be hit (pre-check with next active key)
+  const initialKeyMasked = keys[currentKeyIndex] ? `${keys[currentKeyIndex].slice(0, 8)}...` : 'default';
+  await waitForRateLimit(initialKeyMasked, ESTIMATED_TOKENS);
 
   const promptText = buildUserPrompt({ post, contextPosts, accounts });
 
@@ -82,9 +83,9 @@ export async function analyzePost(post, contextPosts, accounts) {
       const raw = response.text;
       const parsed = JSON.parse(raw);
 
-      // Record successful call
+      // Record successful call using this specific key
       const tokensUsed = response.usageMetadata?.totalTokenCount || ESTIMATED_TOKENS;
-      recordCall(tokensUsed);
+      recordCall(maskedKey, tokensUsed);
 
       logger.info(
         {
@@ -125,9 +126,9 @@ export async function analyzePost(post, contextPosts, accounts) {
         
         await new Promise(resolve => setTimeout(resolve, retryDelayMs));
         
-        // If it was a 429, also wait again for rate limit
+        // If it was a 429, also wait again for rate limit on this key
         if (is429) {
-          await waitForRateLimit(ESTIMATED_TOKENS, attempt + 1);
+          await waitForRateLimit(maskedKey, ESTIMATED_TOKENS, attempt + 1);
         }
         continue;
       }

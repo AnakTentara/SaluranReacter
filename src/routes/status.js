@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getRateLimitStats } from '../ai/ratelimit.js';
+import { getAllRateLimitStats } from '../ai/ratelimit.js';
 import { getRecentReactions, getRecentDebugMessages, clearDebugMessages } from '../utils/db.js';
 import logger from '../utils/logger.js';
 
@@ -12,13 +12,13 @@ export default function statusRouter(botManager, reactor) {
       accounts: botManager.getAllStatus(),
       listener: botManager.listenerAccountId,
       pendingReactions: reactor.getPendingCount(),
-      rateLimit: getRateLimitStats(),
+      rateLimit: getAllRateLimitStats(),
     });
   });
 
   // ── Rate limit stats ─────────────────────────────────────────────────────
   router.get('/status/ratelimit', (req, res) => {
-    res.json(getRateLimitStats());
+    res.json(getAllRateLimitStats());
   });
 
   // ── QR code for a specific account ───────────────────────────────────────

@@ -9,6 +9,8 @@ const state = {
   config: null,
   activeTab: 'accounts',
   selectedAccountIdForQr: null,
+  selectedApiKeyIndex: 0,
+  rateLimitStats: [],
 };
 
 // ── DOM Cache ──────────────────────────────────────────────────────────────
@@ -25,6 +27,10 @@ const DOM = {
   rlRpmBar: document.getElementById('rl-rpm-bar'),
   rlRpdVal: document.getElementById('rl-rpd-val'),
   rlRpdBar: document.getElementById('rl-rpd-bar'),
+  rlPrevKey: document.getElementById('rl-prev-key'),
+  rlNextKey: document.getElementById('rl-next-key'),
+  rlKeyIndex: document.getElementById('rl-key-index'),
+  rlKeyMasked: document.getElementById('rl-key-masked'),
 
   // Apikey
   inputApikey: document.getElementById('input-apikey'),
@@ -125,6 +131,19 @@ function setupEventListeners() {
 
   // Force React Debug
   document.getElementById('btn-debug-react').addEventListener('click', forceReact);
+
+  // Rate Limit Key Carousel Navigation
+  DOM.rlPrevKey.addEventListener('click', () => {
+    if (!state.rateLimitStats || state.rateLimitStats.length <= 1) return;
+    state.selectedApiKeyIndex = (state.selectedApiKeyIndex - 1 + state.rateLimitStats.length) % state.rateLimitStats.length;
+    renderRateLimitCurrentKey();
+  });
+
+  DOM.rlNextKey.addEventListener('click', () => {
+    if (!state.rateLimitStats || state.rateLimitStats.length <= 1) return;
+    state.selectedApiKeyIndex = (state.selectedApiKeyIndex + 1) % state.rateLimitStats.length;
+    renderRateLimitCurrentKey();
+  });
 }
 
 function switchTab(tab) {
@@ -354,8 +373,38 @@ function renderChannels() {
 }
 
 // ── Rate Limit UI ──────────────────────────────────────────────────────────
-function updateRateLimitUI(stats) {
+function updateRateLimitUI(statsArray) {
+  if (!statsArray) return;
+  
+  state.rateLimitStats = Array.isArray(statsArray) ? statsArray : [statsArray];
+  
+  if (state.selectedApiKeyIndex >= state.rateLimitStats.length) {
+    state.selectedApiKeyIndex = 0;
+  }
+  
+  renderRateLimitCurrentKey();
+}
+
+function renderRateLimitCurrentKey() {
+  const stats = state.rateLimitStats[state.selectedApiKeyIndex];
   if (!stats) return;
+
+  const totalKeys = state.rateLimitStats.length;
+  DOM.rlKeyIndex.textContent = `${state.selectedApiKeyIndex + 1}/${totalKeys}`;
+  DOM.rlKeyMasked.textContent = stats.key || 'default';
+
+  if (totalKeys <= 1) {
+    DOM.rlPrevKey.style.opacity = '0.3';
+    DOM.rlNextKey.style.opacity = '0.3';
+    DOM.rlPrevKey.style.cursor = 'not-allowed';
+    DOM.rlNextKey.style.cursor = 'not-allowed';
+  } else {
+    DOM.rlPrevKey.style.opacity = '1';
+    DOM.rlNextKey.style.opacity = '1';
+    DOM.rlPrevKey.style.cursor = 'pointer';
+    DOM.rlNextKey.style.cursor = 'pointer';
+  }
+
   const rpmPct = (stats.rpm.used / stats.rpm.limit) * 100;
   const rpdPct = (stats.rpd.used / stats.rpd.limit) * 100;
 

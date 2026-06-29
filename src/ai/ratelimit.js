@@ -1,5 +1,6 @@
 import logger from '../utils/logger.js';
 import { logApiCall, getTodayApiCallCount } from '../utils/db.js';
+import { getConfig } from '../utils/config.js';
 
 // ─── Free Tier Limits (with -2 buffer) ────────────────────────────────────
 const LIMITS = {
@@ -8,39 +9,49 @@ const LIMITS = {
   RPD: 498,         // 500 - 2
 };
 
-// Sliding window entries: { timestamp: ms, tokens: number }
-const minuteWindow = [];
-let tokenMinuteUsed = 0;
+// Map of keyMasked → { minuteWindow: Array, tokenMinuteUsed: Number }
+const keyStates = new Map();
 
-// Reset minute window every 60s
+function getKeyState(keyMasked = 'default') {
+  if (!keyStates.has(keyMasked)) {
+    keyStates.set(keyMasked, {
+      minuteWindow: [],
+      tokenMinuteUsed: 0
+    });
+  }
+  return keyStates.get(keyMasked);
+}
+
+// Reset minute windows for all tracked keys every 5s
 setInterval(() => {
   const cutoff = Date.now() - 60_000;
-  let removed = 0;
-  while (minuteWindow.length > 0 && minuteWindow[0].timestamp < cutoff) {
-    tokenMinuteUsed -= minuteWindow[0].tokens;
-    minuteWindow.shift();
-    removed++;
+  for (const [key, state] of keyStates.entries()) {
+    while (state.minuteWindow.length > 0 && state.minuteWindow[0].timestamp < cutoff) {
+      state.tokenMinuteUsed -= state.minuteWindow[0].tokens;
+      state.minuteWindow.shift();
+    }
+    if (state.tokenMinuteUsed < 0) state.tokenMinuteUsed = 0;
   }
-  if (tokenMinuteUsed < 0) tokenMinuteUsed = 0;
 }, 5_000);
 
 /**
- * Check if we can make a Gemini API call.
+ * Check if we can make a Gemini API call with a specific key.
  * Returns { allowed: boolean, waitMs: number, reason: string }
  */
-export function checkRateLimit(estimatedTokens = 5000) {
+export function checkRateLimit(apiKeyMasked = 'default', estimatedTokens = 5000) {
   const now = Date.now();
   const cutoff = now - 60_000;
+  const state = getKeyState(apiKeyMasked);
 
   // Clean expired entries from window
-  while (minuteWindow.length > 0 && minuteWindow[0].timestamp < cutoff) {
-    tokenMinuteUsed -= minuteWindow[0].tokens;
-    minuteWindow.shift();
+  while (state.minuteWindow.length > 0 && state.minuteWindow[0].timestamp < cutoff) {
+    state.tokenMinuteUsed -= state.minuteWindow[0].tokens;
+    state.minuteWindow.shift();
   }
-  if (tokenMinuteUsed < 0) tokenMinuteUsed = 0;
+  if (state.tokenMinuteUsed < 0) state.tokenMinuteUsed = 0;
 
-  const currentRpm = minuteWindow.length;
-  const todayCount = getTodayApiCallCount();
+  const currentRpm = state.minuteWindow.length;
+  const todayCount = getTodayApiCallCount(apiKeyMasked);
 
   if (todayCount >= LIMITS.RPD) {
     return { allowed: false, waitMs: msUntilMidnight(), reason: `RPD limit reached (${todayCount}/${LIMITS.RPD})` };
@@ -48,15 +59,15 @@ export function checkRateLimit(estimatedTokens = 5000) {
 
   if (currentRpm >= LIMITS.RPM) {
     // Wait until oldest entry exits the 60s window
-    const oldestTs = minuteWindow[0]?.timestamp || now;
+    const oldestTs = state.minuteWindow[0]?.timestamp || now;
     const waitMs = Math.max(0, 60_000 - (now - oldestTs)) + 500;
     return { allowed: false, waitMs, reason: `RPM limit reached (${currentRpm}/${LIMITS.RPM})` };
   }
 
-  if (tokenMinuteUsed + estimatedTokens > LIMITS.TPM) {
-    const oldestTs = minuteWindow[0]?.timestamp || now;
+  if (state.tokenMinuteUsed + estimatedTokens > LIMITS.TPM) {
+    const oldestTs = state.minuteWindow[0]?.timestamp || now;
     const waitMs = Math.max(0, 60_000 - (now - oldestTs)) + 500;
-    return { allowed: false, waitMs, reason: `TPM limit would be exceeded (${tokenMinuteUsed}+${estimatedTokens}/${LIMITS.TPM})` };
+    return { allowed: false, waitMs, reason: `TPM limit would be exceeded (${state.tokenMinuteUsed}+${estimatedTokens}/${LIMITS.TPM})` };
   }
 
   return { allowed: true, waitMs: 0, reason: 'ok' };
@@ -65,37 +76,59 @@ export function checkRateLimit(estimatedTokens = 5000) {
 /**
  * Record a successful API call.
  */
-export function recordCall(tokensUsed = 0) {
+export function recordCall(apiKeyMasked = 'default', tokensUsed = 0) {
   const now = Date.now();
-  minuteWindow.push({ timestamp: now, tokens: tokensUsed });
-  tokenMinuteUsed += tokensUsed;
-  logApiCall(tokensUsed);
+  const state = getKeyState(apiKeyMasked);
+  state.minuteWindow.push({ timestamp: now, tokens: tokensUsed });
+  state.tokenMinuteUsed += tokensUsed;
+  logApiCall(apiKeyMasked, tokensUsed);
 }
 
 /**
- * Get current usage stats for dashboard.
+ * Get current usage stats for a specific key.
  */
-export function getRateLimitStats() {
-  const currentRpm = minuteWindow.length;
-  const todayCount = getTodayApiCallCount();
+export function getRateLimitStats(apiKeyMasked = 'default') {
+  const state = getKeyState(apiKeyMasked);
+  const currentRpm = state.minuteWindow.length;
+  const todayCount = getTodayApiCallCount(apiKeyMasked);
   return {
+    key: apiKeyMasked,
     rpm: { used: currentRpm, limit: LIMITS.RPM },
-    tpm: { used: tokenMinuteUsed, limit: LIMITS.TPM },
+    tpm: { used: state.tokenMinuteUsed, limit: LIMITS.TPM },
     rpd: { used: todayCount, limit: LIMITS.RPD },
   };
+}
+
+/**
+ * Get rate limit stats for all currently configured keys.
+ */
+export function getAllRateLimitStats() {
+  const cfg = getConfig();
+  let keys = [];
+  if (Array.isArray(cfg.geminiApiKeys)) {
+    keys = cfg.geminiApiKeys.map(k => k ? `${k.trim().slice(0, 8)}...` : '').filter(Boolean);
+  }
+  if (keys.length === 0 && cfg.geminiApiKey) {
+    keys.push(`${cfg.geminiApiKey.trim().slice(0, 8)}...`);
+  }
+  if (keys.length === 0) {
+    keys.push('default');
+  }
+
+  return keys.map(k => getRateLimitStats(k));
 }
 
 /**
  * Wait until rate limit allows a call, then resolve.
  * Includes exponential backoff for 429 errors.
  */
-export async function waitForRateLimit(estimatedTokens = 5000, attempt = 0) {
-  const check = checkRateLimit(estimatedTokens);
+export async function waitForRateLimit(apiKeyMasked = 'default', estimatedTokens = 5000, attempt = 0) {
+  const check = checkRateLimit(apiKeyMasked, estimatedTokens);
   if (check.allowed) return;
 
-  logger.warn({ reason: check.reason, waitMs: check.waitMs }, 'Rate limit — waiting');
+  logger.warn({ key: apiKeyMasked, reason: check.reason, waitMs: check.waitMs }, 'Rate limit — waiting');
   await sleep(check.waitMs);
-  return waitForRateLimit(estimatedTokens, attempt + 1);
+  return waitForRateLimit(apiKeyMasked, estimatedTokens, attempt + 1);
 }
 
 /**

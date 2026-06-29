@@ -13,7 +13,7 @@ import { BotManager } from './bot/manager.js';
 import { Reactor } from './bot/reactor.js';
 import { initMonitor, startPolling } from './channel/monitor.js';
 import { cleanMediaCache } from './channel/media.js';
-import { getRateLimitStats } from './ai/ratelimit.js';
+import { getAllRateLimitStats } from './ai/ratelimit.js';
 import configRouter from './routes/config.js';
 import statusRouter from './routes/status.js';
 
@@ -62,7 +62,7 @@ io.on('connection', (socket) => {
 
   // Send current status on connect
   socket.emit('accounts:all', botManager.getAllStatus());
-  socket.emit('ratelimit:stats', getRateLimitStats());
+  socket.emit('ratelimit:stats', getAllRateLimitStats());
 
   socket.on('disconnect', () => {
     logger.debug({ id: socket.id }, 'Dashboard client disconnected');
@@ -71,7 +71,7 @@ io.on('connection', (socket) => {
 
 // Broadcast rate limit stats every 10s
 setInterval(() => {
-  io.emit('ratelimit:stats', getRateLimitStats());
+  io.emit('ratelimit:stats', getAllRateLimitStats());
 }, 10_000);
 
 // Clean media cache every hour

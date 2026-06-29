@@ -173,10 +173,11 @@ export function clearDebugMessages() {
 
 // ── Rate Limit Log ─────────────────────────────────────────────────────────
 
-export function logApiCall(tokensUsed = 0) {
+export function logApiCall(apiKeyMasked, tokensUsed = 0) {
   _db.rate_limit_log.push({
     id: Date.now() + Math.random(),
     event: 'call',
+    api_key: apiKeyMasked || 'default',
     tokens_used: tokensUsed,
     timestamp: Math.floor(Date.now() / 1000),
   });
@@ -188,7 +189,9 @@ export function logApiCall(tokensUsed = 0) {
   saveToDisk();
 }
 
-export function getTodayApiCallCount() {
+export function getTodayApiCallCount(apiKeyMasked) {
   const midnight = Math.floor(Date.now() / 1000) - (Math.floor(Date.now() / 1000) % 86400);
-  return _db.rate_limit_log.filter((l) => l.event === 'call' && l.timestamp >= midnight).length;
+  return _db.rate_limit_log.filter(
+    (l) => l.event === 'call' && l.timestamp >= midnight && l.api_key === (apiKeyMasked || 'default')
+  ).length;
 }

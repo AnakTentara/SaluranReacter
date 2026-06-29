@@ -42,7 +42,15 @@
       </nav>
       <!-- Rate Limit Status -->
       <div class="rate-limit-panel">
-        <div class="rl-title">Gemini API Limit</div>
+        <div class="rl-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <div class="rl-title" style="margin-bottom: 0;">Gemini API Limit</div>
+          <div class="rl-nav-arrows" style="display: flex; gap: 8px; color: var(--text-muted); cursor: pointer; font-size: 11px;">
+            <span id="rl-prev-key" style="user-select:none; font-weight:bold; padding: 0 4px;">◀</span>
+            <span id="rl-key-index" style="user-select:none; color: var(--text-main);">1/1</span>
+            <span id="rl-next-key" style="user-select:none; font-weight:bold; padding: 0 4px;">▶</span>
+          </div>
+        </div>
+        <div id="rl-key-masked" style="font-family: var(--font-mono); font-size: 10px; color: var(--primary); margin-bottom: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">default</div>
         <div class="rl-item">
           <div class="rl-label">RPM <span id="rl-rpm-val">0/13</span></div>
           <div class="rl-bar"><div class="rl-fill" id="rl-rpm-bar"></div></div>
