@@ -1214,3 +1214,130 @@ textarea.input {
   margin-top: auto;
 }
 
+/* ── COLLAPSED SIDEBAR ───────────────────────────────────────────────────── */
+.sidebar {
+  transition: width 0.3s ease;
+}
+
+.main {
+  transition: margin-left 0.3s ease;
+}
+
+.sidebar.collapsed {
+  width: 70px;
+}
+
+.sidebar.collapsed .logo-text,
+.sidebar.collapsed .nav-btn span:not(.nav-icon) {
+  display: none;
+}
+
+.sidebar.collapsed .sidebar-toggle-btn {
+  margin: 0 auto;
+}
+
+.sidebar.collapsed .logo {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar.collapsed .nav-btn {
+  justify-content: center;
+  padding: 12px;
+}
+
+.sidebar.collapsed ~ .main {
+  margin-left: 70px;
+}
+
+/* ── SUB-SIDEBAR CHANNEL SELECTOR ────────────────────────────────────────── */
+.sub-sidebar-item {
+  padding: 12px;
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  transition: background-color 0.2s, border-color 0.2s;
+}
+
+.sub-sidebar-item:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.sub-sidebar-item.active {
+  background-color: rgba(0, 92, 75, 0.2);
+  border-color: var(--primary);
+}
+
+.sub-sidebar-item-name {
+  font-weight: 600;
+  color: var(--text-main);
+  font-size: 13.5px;
+}
+
+.sub-sidebar-item-jid {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ── CENTERED FEED BUBBLES ───────────────────────────────────────────────── */
+.chat-body-wrapper {
+  max-width: 750px;
+  width: 100%;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.chat-bubble {
+  align-self: center !important;
+  width: 100%;
+  max-width: 680px;
+}
+
+/* ── STARRED MESSAGES DRAWER ──────────────────────────────────────────────── */
+.drawer-overlay {
+  transition: opacity 0.3s ease;
+}
+
+.drawer-overlay.active {
+  opacity: 1;
+}
+
+.drawer-card {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-md);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 13px;
+  position: relative;
+}
+
+.drawer-card-header {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  padding-bottom: 4px;
+}
+
+.drawer-card-body {
+  color: var(--text-main);
+  line-height: 1.4;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+

@@ -12,11 +12,12 @@
   <div id="app">
     <!-- Sidebar -->
     <aside class="sidebar">
-      <div class="sidebar-header">
+      <div class="sidebar-header" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
         <div class="logo">
           <span class="logo-icon">🤖</span>
           <span class="logo-text">WA Reactor</span>
         </div>
+        <button id="btn-toggle-sidebar" class="sidebar-toggle-btn" style="background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 18px; padding: 4px 8px; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: center; transition: background-color 0.2s;">☰</button>
       </div>
       <nav class="nav">
         <button class="nav-btn active" data-tab="accounts" id="nav-accounts">
@@ -90,35 +91,71 @@
       </div>
 
       <!-- ── TAB: CHAT ──────────────────────────────────────────────── -->
-      <div class="tab-panel" id="tab-chat">
-        <div class="panel-header">
-          <h1>Obrolan Saluran</h1>
-          <button class="btn btn-ghost" id="btn-refresh-chat">🔄 Refresh</button>
-        </div>
-        <div class="chat-container">
-          <div class="chat-header-info">
-            <span class="chat-title">💬 Feed Saluran Acell</span>
-            <span class="chat-subtitle" id="chat-count-label">0 Postingan Tersimpan</span>
+      <div class="tab-panel" id="tab-chat" style="padding: 0; height: calc(100vh - 40px); overflow: hidden;">
+        <div class="dual-pane-layout" style="display: flex; height: 100%; width: 100%;">
+          <!-- Sub-sidebar (Channel List) -->
+          <div class="sub-sidebar" style="width: 280px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background-color: var(--bg-sidebar);">
+            <div class="sub-sidebar-header" style="padding: 16px; border-bottom: 1px solid var(--border);">
+              <h2 style="font-size: 15px; margin: 0;">Pilih Saluran</h2>
+            </div>
+            <div class="sub-sidebar-list" id="chat-channel-list" style="flex-grow: 1; overflow-y: auto; padding: 8px; display:flex; flex-direction:column; gap:6px;">
+              <!-- List saluran terisi di sini -->
+            </div>
           </div>
-          <div class="chat-body" id="chat-history-body">
-            <div class="empty-state">
-              <span>💬</span>
-              <p>Belum ada postingan saluran. Aktifkan bot dan tunggu postingan baru.</p>
+          <!-- Right Pane (Feed Obrolan) -->
+          <div class="chat-feed-pane" style="flex-grow: 1; display: flex; flex-direction: column; height: 100%; position: relative;">
+            <div class="chat-pane-empty-state" id="chat-empty-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); padding: 40px; text-align: center;">
+              <span style="font-size: 48px; margin-bottom: 16px;">💬</span>
+              <h3>Belum Ada Saluran yang Dipilih</h3>
+              <p style="max-width: 320px; font-size: 13px; margin-top: 8px; color: var(--text-muted);">Silakan pilih salah satu saluran dari daftar di sebelah kiri untuk melihat riwayat postingan.</p>
+            </div>
+            <div class="chat-container-wrapper" id="chat-active-view" style="display: none; flex-direction: column; height: 100%; width: 100%;">
+              <div class="chat-pane-header" style="background-color: #202c33; padding: 12px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display:flex; flex-direction:column;">
+                  <span class="chat-title" id="active-chat-title">Feed Saluran</span>
+                  <span class="chat-subtitle" id="chat-count-label">0 Postingan Tersimpan</span>
+                </div>
+                <div style="display:flex; gap:10px;">
+                  <button class="btn btn-primary btn-sm" id="btn-open-starred-drawer" style="padding: 6px 12px; font-size: 12px;">⭐ Pesan Berbintang</button>
+                  <button class="btn btn-ghost btn-sm" id="btn-refresh-chat" style="padding: 6px 12px; font-size: 12px;">🔄 Refresh</button>
+                </div>
+              </div>
+              <div class="chat-body" id="chat-history-body" style="flex-grow: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 12px;">
+                <!-- Balon chat terpusat di JS -->
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- ── TAB: STARRED ───────────────────────────────────────────── -->
-      <div class="tab-panel" id="tab-starred">
-        <div class="panel-header">
-          <h1>Galeri Bintang</h1>
-        </div>
-        <p class="settings-desc" style="margin-bottom: 20px;">Menampilkan postingan media (Foto/Video/Audio/Stiker) yang kamu tandai dengan bintang (⭐). Berkas media ini disimpan permanen dan aman dari pembersihan cache otomatis.</p>
-        <div class="starred-grid" id="starred-media-grid">
-          <div class="empty-state">
-            <span>⭐</span>
-            <p>Belum ada media berbintang. Klik ikon ⭐ pada balon chat untuk menyimpannya di sini.</p>
+      <!-- ── TAB: GALLERY ───────────────────────────────────────────── -->
+      <div class="tab-panel" id="tab-gallery" style="padding: 0; height: calc(100vh - 40px); overflow: hidden;">
+        <div class="dual-pane-layout" style="display: flex; height: 100%; width: 100%;">
+          <!-- Sub-sidebar (Channel List) -->
+          <div class="sub-sidebar" style="width: 280px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background-color: var(--bg-sidebar);">
+            <div class="sub-sidebar-header" style="padding: 16px; border-bottom: 1px solid var(--border);">
+              <h2 style="font-size: 15px; margin: 0;">Pilih Saluran</h2>
+            </div>
+            <div class="sub-sidebar-list" id="gallery-channel-list" style="flex-grow: 1; overflow-y: auto; padding: 8px; display:flex; flex-direction:column; gap:6px;">
+              <!-- List saluran terisi di sini -->
+            </div>
+          </div>
+          <!-- Right Pane (Grid Media) -->
+          <div class="media-gallery-pane" style="flex-grow: 1; display: flex; flex-direction: column; height: 100%; padding: 20px; overflow-y: auto; width: 100%;">
+            <div class="chat-pane-empty-state" id="gallery-empty-view" style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); text-align: center;">
+              <span style="font-size: 48px; margin-bottom: 16px;">🖼️</span>
+              <h3>Belum Ada Saluran yang Dipilih</h3>
+              <p style="max-width: 320px; font-size: 13px; margin-top: 8px; color: var(--text-muted);">Pilih salah satu saluran dari daftar di sebelah kiri untuk melihat album media (foto, video, VN, stiker).</p>
+            </div>
+            <div class="gallery-content-wrapper" id="gallery-active-view" style="display: none; flex-direction: column; width: 100%;">
+              <div class="panel-header" style="margin-bottom: 16px; display:flex; justify-content:space-between; align-items:center;">
+                <h1 id="active-gallery-title" style="margin:0;">Galeri Media Saluran</h1>
+              </div>
+              <p class="settings-desc" style="margin-bottom: 20px;">Menampilkan semua media (Foto, Video, Voice Note, Stiker) yang pernah dikirim oleh saluran ini. Klik ⭐ untuk mem-bookmark agar aman selamanya.</p>
+              <div class="starred-grid" id="starred-media-grid">
+                <!-- Item media terisi di sini -->
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -404,6 +441,22 @@
         </div>
         <div id="edit-account-error" class="error-msg" style="display:none"></div>
         <button class="btn btn-primary btn-full" id="btn-submit-edit">Simpan Perubahan</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Starred Messages Drawer (Slide-out) -->
+  <div class="drawer-overlay" id="starred-drawer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 1000;">
+    <div class="drawer-content" id="starred-drawer-content" style="position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background-color: var(--bg-card); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); transition: right 0.3s ease; display: flex; flex-direction: column; z-index: 1001;">
+      <div class="drawer-header" style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sidebar);">
+        <h2 style="font-size: 16px; margin: 0; display:flex; align-items:center; gap:8px;">⭐ Pesan Berbintang</h2>
+        <button class="modal-close" id="btn-close-starred-drawer" style="cursor:pointer; background:none; border:none; color:var(--text-muted); font-size:18px;">✕</button>
+      </div>
+      <div class="drawer-body" id="starred-drawer-body" style="flex-grow: 1; overflow-y: auto; padding: 16px; display:flex; flex-direction:column; gap:12px;">
+        <div class="empty-state">
+          <span>⭐</span>
+          <p>Belum ada pesan berbintang di saluran ini.</p>
+        </div>
       </div>
     </div>
   </div>

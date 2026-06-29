@@ -72,10 +72,17 @@ export async function downloadAndEncodeMedia(msg, contentType, sock) {
   const cachePath = join(CACHE_DIR, cacheKey);
 
   // Return cached version if exists
-  if (existsSync(cachePath)) {
+  const metaPath = cachePath + '.json';
+  if (existsSync(cachePath) && existsSync(metaPath)) {
     try {
-      const cached = JSON.parse(readFileSync(cachePath, 'utf-8'));
-      return cached;
+      const meta = JSON.parse(readFileSync(metaPath, 'utf-8'));
+      const buffer = readFileSync(cachePath);
+      return {
+        base64: buffer.toString('base64'),
+        mimeType: meta.mimeType,
+        filePath: cachePath,
+        size: buffer.length
+      };
     } catch {
       // Cache corrupted, re-download
     }
@@ -98,13 +105,15 @@ export async function downloadAndEncodeMedia(msg, contentType, sock) {
     const mimeType = getMimeType(msg, contentType);
     const base64 = buffer.toString('base64');
 
-    const result = { base64, mimeType, filePath: cachePath, size: buffer.length };
+    // Save raw binary file to disk
+    writeFileSync(cachePath, buffer);
 
-    // Cache to disk
-    writeFileSync(cachePath, JSON.stringify(result), 'utf-8');
+    // Save metadata separately
+    const meta = { mimeType, size: buffer.length };
+    writeFileSync(metaPath, JSON.stringify(meta), 'utf-8');
 
-    logger.debug({ msgId, contentType, size: buffer.length, mimeType }, 'Media downloaded & cached');
-    return result;
+    logger.debug({ msgId, contentType, size: buffer.length, mimeType }, 'Media downloaded & cached (raw buffer + meta.json)');
+    return { base64, mimeType, filePath: cachePath, size: buffer.length };
   } catch (err) {
     logger.error({ err: err.message, msgId, contentType }, 'Failed to download media');
     return null;
@@ -143,12 +152,21 @@ export function cleanMediaCache() {
       const filePath = join(CACHE_DIR, file);
       const stat = statSync(filePath);
       if (now - stat.mtimeMs > CACHE_TTL_MS) {
+        // Skip metadata files directly, they are cleaned up with the raw media files
+        if (file.endsWith('.json')) {
+          continue;
+        }
+
         // Protect starred media from deletion
         if (isMediaStarred(file)) {
           logger.debug({ file }, 'Skipping cleanup of starred media file');
           continue;
         }
         unlinkSync(filePath);
+        const metaPath = filePath + '.json';
+        if (existsSync(metaPath)) {
+          unlinkSync(metaPath);
+        }
         removed++;
       }
     }

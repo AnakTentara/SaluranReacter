@@ -1,4 +1,4 @@
-import { writeFileSync, readFileSync, existsSync, mkdirSync } from 'fs';
+import { writeFileSync, readFileSync, existsSync, mkdirSync, utimesSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import logger from './logger.js';
@@ -216,6 +216,25 @@ export function togglePostStar(postId) {
   if (post) {
     post.is_starred = post.is_starred === 1 ? 0 : 1;
     saveToDisk();
+
+    // Reset mtime on unstar so cleanup runs 1 week from now
+    if (post.is_starred === 0) {
+      try {
+        const filePath = join(ROOT, 'data', 'media_cache', `${post.id}_${post.content_type}`);
+        const metaPath = filePath + '.json';
+        const now = new Date();
+        if (existsSync(filePath)) {
+          utimesSync(filePath, now, now);
+        }
+        if (existsSync(metaPath)) {
+          utimesSync(metaPath, now, now);
+        }
+        logger.info({ postId }, 'Unstarred post: updated file times for 1-week cleanup cooldown');
+      } catch (err) {
+        logger.error({ err: err.message, postId }, 'Failed to update file times on unstar');
+      }
+    }
+
     logger.info({ postId, is_starred: post.is_starred }, 'Post star toggled');
     return post.is_starred;
   }

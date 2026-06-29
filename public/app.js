@@ -11,6 +11,9 @@ const state = {
   selectedAccountIdForQr: null,
   selectedApiKeyIndex: 0,
   rateLimitStats: [],
+  selectedChannelIdForChat: null,
+  selectedChannelIdForGallery: null,
+  isSidebarCollapsed: localStorage.getItem('sidebar_collapsed') === 'true',
 };
 
 // ── DOM Cache ──────────────────────────────────────────────────────────────
@@ -88,11 +91,35 @@ const DOM = {
   silentEnd: document.getElementById('silent-end'),
   silentMultiplier: document.getElementById('silent-multiplier'),
   btnSaveSilent: document.getElementById('btn-save-silent'),
+
+  // Collapsible Sidebar & Layout Overhauls
+  btnToggleSidebar: document.getElementById('btn-toggle-sidebar'),
+  sidebar: document.querySelector('.sidebar'),
+  
+  // Dual Pane Containers
+  chatChannelList: document.getElementById('chat-channel-list'),
+  galleryChannelList: document.getElementById('gallery-channel-list'),
+  chatEmptyView: document.getElementById('chat-empty-view'),
+  chatActiveView: document.getElementById('chat-active-view'),
+  galleryEmptyView: document.getElementById('gallery-empty-view'),
+  galleryActiveView: document.getElementById('gallery-active-view'),
+  activeChatTitle: document.getElementById('active-chat-title'),
+  activeGalleryTitle: document.getElementById('active-gallery-title'),
+
+  // Starred Drawer
+  starredDrawer: document.getElementById('starred-drawer'),
+  starredDrawerContent: document.getElementById('starred-drawer-content'),
+  starredDrawerBody: document.getElementById('starred-drawer-body'),
+  btnOpenStarredDrawer: document.getElementById('btn-open-starred-drawer'),
+  btnCloseStarredDrawer: document.getElementById('btn-close-starred-drawer'),
 };
 
 // ── Init App ───────────────────────────────────────────────────────────────
 window.addEventListener('DOMContentLoaded', async () => {
   setupEventListeners();
+  if (state.isSidebarCollapsed) {
+    DOM.sidebar.classList.add('collapsed');
+  }
   await refreshAll();
   appendLog('system', 'Dashboard initialized and connected to server');
 
@@ -162,6 +189,27 @@ function setupEventListeners() {
 
   // Refresh Chat Viewer
   DOM.btnRefreshChat.addEventListener('click', loadChatHistory);
+
+  // Sidebar Toggle Minimize
+  DOM.btnToggleSidebar.addEventListener('click', () => {
+    state.isSidebarCollapsed = !state.isSidebarCollapsed;
+    DOM.sidebar.classList.toggle('collapsed', state.isSidebarCollapsed);
+    localStorage.setItem('sidebar_collapsed', state.isSidebarCollapsed);
+  });
+
+  // Starred Drawer Toggle
+  DOM.btnOpenStarredDrawer.addEventListener('click', () => {
+    DOM.starredDrawer.style.display = 'block';
+    setTimeout(() => {
+      DOM.starredDrawerContent.style.right = '0';
+    }, 10);
+    loadStarredDrawer();
+  });
+
+  DOM.btnCloseStarredDrawer.addEventListener('click', closeStarredDrawer);
+  DOM.starredDrawer.addEventListener('click', (e) => {
+    if (e.target === DOM.starredDrawer) closeStarredDrawer();
+  });
 }
 
 function switchTab(tab) {
@@ -174,9 +222,21 @@ function switchTab(tab) {
   });
 
   if (tab === 'chat') {
-    loadChatHistory();
-  } else if (tab === 'starred') {
-    loadStarredGallery();
+    renderChannelSelectors('chat');
+    if (state.selectedChannelIdForChat) {
+      loadChatHistory();
+    } else {
+      DOM.chatEmptyView.style.display = 'flex';
+      DOM.chatActiveView.style.display = 'none';
+    }
+  } else if (tab === 'gallery') {
+    renderChannelSelectors('gallery');
+    if (state.selectedChannelIdForGallery) {
+      loadStarredGallery();
+    } else {
+      DOM.galleryEmptyView.style.display = 'flex';
+      DOM.galleryActiveView.style.display = 'none';
+    }
   }
 }
 
@@ -999,12 +1059,17 @@ async function saveSilentHours() {
   }
 }
 
-// ── Chat History Viewer ──────────────────────────────────────────────────────
 async function loadChatHistory() {
+  const channelId = state.selectedChannelIdForChat;
+  if (!channelId) return;
+
   DOM.chatHistoryBody.innerHTML = '<div class="empty-state">⏳ Memuat riwayat chat...</div>';
   try {
     const res = await fetch('/api/posts');
-    const posts = await res.json();
+    const allPosts = await res.json();
+    
+    // Filter posts for this specific channel
+    const posts = allPosts.filter((p) => p.channel_id === channelId);
     
     // Sort chronological (oldest first for display)
     posts.reverse();
@@ -1021,6 +1086,11 @@ async function loadChatHistory() {
     }
 
     DOM.chatHistoryBody.innerHTML = '';
+    
+    // Centered wrapper for chat bubbles
+    const wrapper = document.createElement('div');
+    wrapper.className = 'chat-body-wrapper';
+
     posts.forEach((post) => {
       const bubble = document.createElement('div');
       bubble.className = 'chat-bubble acell';
@@ -1037,7 +1107,6 @@ async function loadChatHistory() {
 
       let mediaHtml = '';
       if (post.media_path) {
-        // Media files are saved as {msgId}_{contentType} in media_cache
         const mediaUrl = `/media_cache/${post.id}_${post.content_type}`;
         if (post.content_type === 'image') {
           mediaHtml = `<div class="chat-bubble-media"><a href="${mediaUrl}" target="_blank"><img src="${mediaUrl}" alt="Media Post" /></a></div>`;
@@ -1081,8 +1150,8 @@ async function loadChatHistory() {
           ${actionsHtml}
         </div>
         ${mediaHtml}
-        ${post.text_content ? `<div class="chat-bubble-text" style="white-space: pre-wrap; word-break: break-word;">${escapeHtml(post.text_content)}</div>` : ''}
-        ${post.caption ? `<div class="chat-bubble-caption" style="margin-top: 4px; font-size: 13.5px; opacity: 0.95; white-space: pre-wrap; word-break: break-word;">${escapeHtml(post.caption)}</div>` : ''}
+        ${post.text_content ? `<div class="chat-bubble-text" style="text-align: left; white-space: pre-wrap; word-break: break-word;">${escapeHtml(post.text_content)}</div>` : ''}
+        ${post.caption ? `<div class="chat-bubble-caption" style="text-align: left; margin-top: 4px; font-size: 13.5px; opacity: 0.95; white-space: pre-wrap; word-break: break-word;">${escapeHtml(post.caption)}</div>` : ''}
         <div class="chat-bubble-footer">
           ${deletedBadge}
           <span class="chat-time">${dt}</span>
@@ -1090,8 +1159,10 @@ async function loadChatHistory() {
         ${reactionsHtml}
       `;
 
-      DOM.chatHistoryBody.appendChild(bubble);
+      wrapper.appendChild(bubble);
     });
+
+    DOM.chatHistoryBody.appendChild(wrapper);
 
     // Auto-scroll chat body to the bottom
     setTimeout(() => {
@@ -1105,16 +1176,24 @@ async function loadChatHistory() {
 
 // ── Starred Media Gallery ────────────────────────────────────────────────────
 async function loadStarredGallery() {
-  DOM.starredMediaGrid.innerHTML = '<div class="empty-state">⏳ Memuat galeri bintang...</div>';
+  const channelId = state.selectedChannelIdForGallery;
+  if (!channelId) return;
+
+  DOM.starredMediaGrid.innerHTML = '<div class="empty-state">⏳ Memuat galeri media...</div>';
   try {
-    const res = await fetch('/api/posts/starred');
-    const posts = await res.json();
+    const res = await fetch('/api/posts');
+    const allPosts = await res.json();
+
+    // Filter media posts belonging to this channel
+    const posts = allPosts.filter(
+      (p) => p.channel_id === channelId && p.media_path
+    );
 
     if (posts.length === 0) {
       DOM.starredMediaGrid.innerHTML = `
         <div class="empty-state">
-          <span>⭐</span>
-          <p>Belum ada media berbintang. Klik ikon ⭐ pada balon chat untuk menyimpannya di sini.</p>
+          <span>🖼️</span>
+          <p>Belum ada media (Foto/Video/Audio/Stiker) di saluran ini.</p>
         </div>`;
       return;
     }
@@ -1127,27 +1206,28 @@ async function loadStarredGallery() {
 
       const dt = new Date(post.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
       const mediaUrl = `/media_cache/${post.id}_${post.content_type}`;
+      const isStarred = post.is_starred === 1;
 
       let mediaWrapperHtml = '';
-      if (post.media_path) {
-        if (post.content_type === 'image' || post.content_type === 'sticker') {
-          mediaWrapperHtml = `<img src="${mediaUrl}" alt="Starred Media" />`;
-        } else if (post.content_type === 'video') {
-          mediaWrapperHtml = `<video src="${mediaUrl}" preload="metadata" muted></video>`;
-        } else if (post.content_type === 'audio') {
-          mediaWrapperHtml = `<div style="font-size: 40px;">🎤</div>`;
-        }
-      } else {
-        mediaWrapperHtml = `<div style="font-size: 40px; opacity: 0.5;">💬</div>`;
+      if (post.content_type === 'image' || post.content_type === 'sticker') {
+        mediaWrapperHtml = `<a href="${mediaUrl}" target="_blank"><img src="${mediaUrl}" alt="Starred Media" /></a>`;
+      } else if (post.content_type === 'video') {
+        mediaWrapperHtml = `<video src="${mediaUrl}" controls preload="metadata"></video>`;
+      } else if (post.content_type === 'audio') {
+        mediaWrapperHtml = `
+          <div style="padding: 20px; display:flex; flex-direction:column; align-items:center; gap:8px; width:100%;">
+            <span style="font-size: 32px;">🎤 VN</span>
+            <audio controls src="${mediaUrl}" style="width:100%; height:32px;"></audio>
+          </div>`;
       }
 
       item.innerHTML = `
-        <div class="starred-media-wrapper">
+        <div class="starred-media-wrapper" style="position:relative;">
           ${mediaWrapperHtml}
-          <button class="starred-unstar-btn" onclick="toggleStar('${encodeURIComponent(post.id)}', true)" title="Hapus dari Bintang">⭐</button>
+          <button class="starred-unstar-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${encodeURIComponent(post.id)}', true)" title="${isStarred ? 'Hapus dari Bintang' : 'Bintangi (Simpan Permanen)'}" style="color: ${isStarred ? '#f59e0b' : '#8696a0'}">⭐</button>
         </div>
         <div class="starred-info">
-          <div class="starred-caption">${escapeHtml(post.caption || post.text_content || `[Pesan ${post.content_type.toUpperCase()}]`)}</div>
+          <div class="starred-caption">${escapeHtml(post.caption || post.text_content || `[Berkas ${post.content_type.toUpperCase()}]`)}</div>
           <div class="starred-meta">
             <span>Tipe: <strong>${post.content_type.toUpperCase()}</strong></span>
             <span>${dt}</span>
@@ -1170,8 +1250,15 @@ window.toggleStar = async function (id, fromGallery = false) {
     const data = await res.json();
     if (data.ok) {
       if (fromGallery) {
-        // If unstarring from within the starred gallery, just refresh the gallery
+        // If from media gallery, update gallery and obrolan bubble (if loaded)
         loadStarredGallery();
+        const bubble = document.querySelector(`[data-post-id="${decodeURIComponent(id)}"]`);
+        if (bubble) {
+          const starBtn = bubble.querySelector('.chat-star-btn');
+          if (starBtn) {
+            starBtn.classList.toggle('starred', data.is_starred);
+          }
+        }
       } else {
         // Refresh chat bubble
         const bubble = document.querySelector(`[data-post-id="${decodeURIComponent(id)}"]`);
@@ -1182,6 +1269,10 @@ window.toggleStar = async function (id, fromGallery = false) {
             starBtn.title = data.is_starred ? 'Batal Bintangi' : 'Bintangi (Simpan Permanen)';
           }
         }
+        // If drawer is open, refresh drawer
+        if (DOM.starredDrawer.style.display === 'block') {
+          loadStarredDrawer();
+        }
         appendLog('info', `Pesan ${decodeURIComponent(id)} ${data.is_starred ? 'dibintangi (disimpan permanen)' : 'batal dibintangi'}`);
       }
     }
@@ -1189,3 +1280,113 @@ window.toggleStar = async function (id, fromGallery = false) {
     console.error('Failed to toggle star', err);
   }
 };
+
+// ── Render Channel Selector Lists ─────────────────────────────────────────────
+function renderChannelSelectors(type) {
+  const container = type === 'chat' ? DOM.chatChannelList : DOM.galleryChannelList;
+  container.innerHTML = '';
+
+  if (state.channels.length === 0) {
+    container.innerHTML = '<div style="padding:16px; text-align:center; color:var(--text-muted); font-size:12px;">Belum ada saluran target. Tambahkan di tab Saluran.</div>';
+    return;
+  }
+
+  state.channels.forEach((ch) => {
+    const item = document.createElement('div');
+    const isSelected = type === 'chat' 
+      ? state.selectedChannelIdForChat === ch.id 
+      : state.selectedChannelIdForGallery === ch.id;
+
+    item.className = `sub-sidebar-item ${isSelected ? 'active' : ''}`;
+    item.innerHTML = `
+      <span class="sub-sidebar-item-name">${escapeHtml(ch.name || 'Saluran Tanpa Nama')}</span>
+      <span class="sub-sidebar-item-jid">${escapeHtml(ch.id)}</span>
+    `;
+
+    item.addEventListener('click', () => {
+      if (type === 'chat') {
+        selectChannelForChat(ch.id, ch.name);
+      } else {
+        selectChannelForGallery(ch.id, ch.name);
+      }
+    });
+
+    container.appendChild(item);
+  });
+}
+
+function selectChannelForChat(id, name) {
+  state.selectedChannelIdForChat = id;
+  renderChannelSelectors('chat');
+  
+  DOM.chatEmptyView.style.display = 'none';
+  DOM.chatActiveView.style.display = 'flex';
+  DOM.activeChatTitle.textContent = `💬 Feed ${name || 'Saluran'}`;
+  
+  loadChatHistory();
+}
+
+function selectChannelForGallery(id, name) {
+  state.selectedChannelIdForGallery = id;
+  renderChannelSelectors('gallery');
+
+  DOM.galleryEmptyView.style.display = 'none';
+  DOM.galleryActiveView.style.display = 'flex';
+  DOM.activeGalleryTitle.textContent = `🖼️ Album Media ${name || 'Saluran'}`;
+
+  loadStarredGallery();
+}
+
+// ── Starred Messages Drawer ──────────────────────────────────────────────────
+async function loadStarredDrawer() {
+  const channelId = state.selectedChannelIdForChat;
+  if (!channelId) return;
+
+  DOM.starredDrawerBody.innerHTML = '<div class="empty-state">⏳ Memuat pesan berbintang...</div>';
+  try {
+    const res = await fetch('/api/posts/starred');
+    const starredPosts = await res.json();
+
+    // Filter by channel
+    const posts = starredPosts.filter((p) => p.channel_id === channelId);
+
+    if (posts.length === 0) {
+      DOM.starredDrawerBody.innerHTML = `
+        <div class="empty-state">
+          <span>⭐</span>
+          <p>Belum ada pesan berbintang di saluran ini.</p>
+        </div>`;
+      return;
+    }
+
+    DOM.starredDrawerBody.innerHTML = '';
+    posts.forEach((post) => {
+      const card = document.createElement('div');
+      card.className = 'drawer-card';
+
+      const dt = new Date(post.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
+      const preview = post.text_content || post.caption || `[Berkas ${post.content_type.toUpperCase()}]`;
+
+      card.innerHTML = `
+        <div class="drawer-card-header">
+          <span>${post.content_type.toUpperCase()}</span>
+          <span>${dt}</span>
+        </div>
+        <div class="drawer-card-body">${escapeHtml(preview)}</div>
+        <button class="btn btn-ghost btn-xs" onclick="toggleStar('${encodeURIComponent(post.id)}')" style="align-self: flex-end; padding:2px 8px; font-size:11px; margin-top:4px;">❌ Batal Bintang</button>
+      `;
+
+      DOM.starredDrawerBody.appendChild(card);
+    });
+  } catch (err) {
+    console.error('Failed to load starred drawer', err);
+    DOM.starredDrawerBody.innerHTML = '<div class="empty-state"><p style="color:var(--error)">Gagal memuat</p></div>';
+  }
+}
+
+function closeStarredDrawer() {
+  DOM.starredDrawerContent.style.right = '-400px';
+  setTimeout(() => {
+    DOM.starredDrawer.style.display = 'none';
+  }, 300);
+}
