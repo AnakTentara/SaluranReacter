@@ -94,7 +94,7 @@
       </div>
 
       <!-- ── TAB: CHAT ──────────────────────────────────────────────── -->
-      <div class="tab-panel" id="tab-chat" style="padding: 0; height: calc(100vh - 40px); overflow: hidden;">
+      <div class="tab-panel" id="tab-chat" style="padding: 0;">
         <div class="dual-pane-layout" style="display: flex; height: 100%; width: 100%;">
           <!-- Sub-sidebar (Channel List) -->
           <div class="sub-sidebar" style="width: 280px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background-color: var(--bg-sidebar);">
@@ -132,7 +132,7 @@
       </div>
 
       <!-- ── TAB: GALLERY ───────────────────────────────────────────── -->
-      <div class="tab-panel" id="tab-gallery" style="padding: 0; height: calc(100vh - 40px); overflow: hidden;">
+      <div class="tab-panel" id="tab-gallery" style="padding: 0;">
         <div class="dual-pane-layout" style="display: flex; height: 100%; width: 100%;">
           <!-- Sub-sidebar (Channel List) -->
           <div class="sub-sidebar" style="width: 280px; border-right: 1px solid var(--border); display: flex; flex-direction: column; background-color: var(--bg-sidebar);">
@@ -430,7 +430,7 @@
 
   <!-- Starred Messages Drawer (Slide-out) -->
   <div class="drawer-overlay" id="starred-drawer" style="display: none; position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background-color: rgba(0,0,0,0.5); z-index: 1000;">
-    <div class="drawer-content" id="starred-drawer-content" style="position: fixed; right: -400px; top: 0; width: 400px; height: 100vh; background-color: var(--bg-card); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); transition: right 0.3s ease; display: flex; flex-direction: column; z-index: 1001;">
+    <div class="drawer-content" id="starred-drawer-content" style="position: fixed; top: 0; background-color: var(--bg-card); border-left: 1px solid var(--border); box-shadow: var(--shadow-lg); transition: right 0.3s ease; display: flex; flex-direction: column; z-index: 1001;">
       <div class="drawer-header" style="padding: 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; background-color: var(--bg-sidebar);">
         <h2 style="font-size: 16px; margin: 0; display:flex; align-items:center; gap:8px;"><i data-lucide="star" style="width: 18px; height: 18px; color: var(--warning);"></i> Pesan Berbintang</h2>
         <button class="modal-close" id="btn-close-starred-drawer" style="cursor:pointer; background:none; border:none; color:var(--text-muted); font-size:18px;">✕</button>

@@ -204,7 +204,7 @@ function setupEventListeners() {
   DOM.btnOpenStarredDrawer.addEventListener('click', () => {
     DOM.starredDrawer.style.display = 'block';
     setTimeout(() => {
-      DOM.starredDrawerContent.style.right = '0';
+      DOM.starredDrawerContent.classList.add('open');
     }, 10);
     loadStarredDrawer();
   });
@@ -1400,7 +1400,7 @@ async function loadStarredDrawer() {
 }
 
 function closeStarredDrawer() {
-  DOM.starredDrawerContent.style.right = '-400px';
+  DOM.starredDrawerContent.classList.remove('open');
   setTimeout(() => {
     DOM.starredDrawer.style.display = 'none';
   }, 300);
