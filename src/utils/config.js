@@ -134,3 +134,11 @@ export function updateChannel(id, updates) {
   saveConfig(cfg);
   return cfg.channels[idx];
 }
+
+export function getMaskedKey(key) {
+  if (!key) return '';
+  const trimmed = key.trim();
+  if (trimmed.length <= 14) return trimmed;
+  return `${trimmed.slice(0, 8)}...${trimmed.slice(-4)}`;
+}
+

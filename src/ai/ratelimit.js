@@ -1,6 +1,6 @@
 import logger from '../utils/logger.js';
 import { logApiCall, getTodayApiCallCount } from '../utils/db.js';
-import { getConfig } from '../utils/config.js';
+import { getConfig, getMaskedKey } from '../utils/config.js';
 
 // ─── Free Tier Limits (with -2 buffer) ────────────────────────────────────
 const LIMITS = {
@@ -106,10 +106,10 @@ export function getAllRateLimitStats() {
   const cfg = getConfig();
   let keys = [];
   if (Array.isArray(cfg.geminiApiKeys)) {
-    keys = cfg.geminiApiKeys.map(k => k ? `${k.trim().slice(0, 8)}...` : '').filter(Boolean);
+    keys = cfg.geminiApiKeys.map(k => getMaskedKey(k)).filter(Boolean);
   }
   if (keys.length === 0 && cfg.geminiApiKey) {
-    keys.push(`${cfg.geminiApiKey.trim().slice(0, 8)}...`);
+    keys.push(getMaskedKey(cfg.geminiApiKey));
   }
   if (keys.length === 0) {
     keys.push('default');

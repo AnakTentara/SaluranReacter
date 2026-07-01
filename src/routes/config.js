@@ -11,6 +11,7 @@ import {
   addChannel,
   removeChannel,
   updateChannel,
+  getMaskedKey,
 } from '../utils/config.js';
 import { testApiKey } from '../ai/gemini.js';
 import logger from '../utils/logger.js';
@@ -23,11 +24,11 @@ export default function configRouter(botManager, io) {
     const cfg = getConfig();
     
     // Mask all API keys in response
-    const maskedKeys = (cfg.geminiApiKeys || []).map(k => k ? `${k.slice(0, 8)}...` : '');
+    const maskedKeys = (cfg.geminiApiKeys || []).map(k => getMaskedKey(k));
     
     res.json({
       ...cfg,
-      geminiApiKey: cfg.geminiApiKey ? `${cfg.geminiApiKey.slice(0, 8)}...` : '',
+      geminiApiKey: getMaskedKey(cfg.geminiApiKey),
       geminiApiKeys: maskedKeys,
       geminiApiKeySet: (cfg.geminiApiKeys && cfg.geminiApiKeys.length > 0) || !!cfg.geminiApiKey,
     });

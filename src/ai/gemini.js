@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { getConfig } from '../utils/config.js';
+import { getConfig, getMaskedKey } from '../utils/config.js';
 import { checkRateLimit, waitForRateLimit, recordCall, backoffOnRateLimit } from './ratelimit.js';
 import { SYSTEM_PROMPT, REACTION_SCHEMA, buildUserPrompt } from './prompt.js';
 import logger from '../utils/logger.js';
@@ -38,7 +38,7 @@ export async function analyzePost(post, contextPosts, accounts) {
   }
 
   // Wait if local rate limit would be hit (pre-check with next active key)
-  const initialKeyMasked = keys[currentKeyIndex] ? `${keys[currentKeyIndex].slice(0, 8)}...` : 'default';
+  const initialKeyMasked = keys[currentKeyIndex] ? getMaskedKey(keys[currentKeyIndex]) : 'default';
   await waitForRateLimit(initialKeyMasked, ESTIMATED_TOKENS);
 
   const promptText = buildUserPrompt({ post, contextPosts, accounts });
@@ -57,7 +57,7 @@ export async function analyzePost(post, contextPosts, accounts) {
   for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     // Round-robin selection of the API key
     const activeApiKey = keys[currentKeyIndex];
-    const maskedKey = `${activeApiKey.slice(0, 8)}...`;
+    const maskedKey = getMaskedKey(activeApiKey);
     
     // Rotate to the next key for the next attempt/call
     currentKeyIndex = (currentKeyIndex + 1) % keys.length;
