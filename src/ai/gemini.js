@@ -18,7 +18,7 @@ let currentKeyIndex = 0;
  * @param {Array}  accounts - enabled accounts from config
  * @returns {object} parsed AI JSON response { analysis, reactions }
  */
-export async function analyzePost(post, contextPosts, accounts) {
+export async function analyzePost(post, contextPosts, activeBotCount, silenceDurationMinutes) {
   const cfg = getConfig();
   
   // Get all unique active API keys
@@ -41,7 +41,7 @@ export async function analyzePost(post, contextPosts, accounts) {
   const initialKeyMasked = keys[currentKeyIndex] ? getMaskedKey(keys[currentKeyIndex]) : 'default';
   await waitForRateLimit(initialKeyMasked, ESTIMATED_TOKENS);
 
-  const promptText = buildUserPrompt({ post, contextPosts, accounts });
+  const promptText = buildUserPrompt({ post, contextPosts, activeBotCount, silenceDurationMinutes });
 
   // Build content parts — text always first, then media if present
   const parts = [{ text: promptText }];
@@ -64,7 +64,7 @@ export async function analyzePost(post, contextPosts, accounts) {
 
     try {
       logger.info(
-        { model: MODEL, attempt, accountCount: accounts.length, apiKeyIndex: currentKeyIndex, maskedKey },
+        { model: MODEL, attempt, activeBotCount, apiKeyIndex: currentKeyIndex, maskedKey },
         'Calling Gemini AI'
       );
 
@@ -77,6 +77,13 @@ export async function analyzePost(post, contextPosts, accounts) {
           temperature: 1.7,
           responseMimeType: 'application/json',
           responseSchema: REACTION_SCHEMA,
+          safetySettings: [
+            { category: 'HARM_CATEGORY_HARASSMENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_HATE_SPEECH', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_SEXUALLY_EXPLICIT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_NONE' },
+            { category: 'HARM_CATEGORY_CIVIC_INTEGRITY', threshold: 'BLOCK_NONE' }
+          ]
         },
       });
 

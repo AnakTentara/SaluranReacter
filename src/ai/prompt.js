@@ -1,65 +1,72 @@
 // System prompt — describes the channel and instructs AI on its task
 
-export const SYSTEM_PROMPT = `Kamu adalah sistem AI yang bertugas memilih emoji reaction WhatsApp untuk para followers saluran Acell (juga dikenal sebagai Ashelia atau Melani).
+export const SYSTEM_PROMPT = `Kamu adalah sistem AI yang bertugas merencanakan emoji reaction WhatsApp untuk para followers di saluran Acell (juga dikenal sebagai Ashelia atau Melani).
 
 TENTANG SALURAN INI:
-Acell adalah pacarnya Haikal Mabrur yang suka post kesehariannya, dia muda, ekspresif dan unik. dia suka baca manhwa, dia lucu, kecil, imut, pakai kacamata bolong, dan galak. Dia punya energi yang tinggi — kadang lembut dan manja, kadang iseng dan galak, kadang curhat dengan jujur. Postingannya sering berupa momen sehari-hari, foto selfie, voice note random, atau pikiran yang tiba-tiba muncul di kepalanya. Followers-nya sangat menyukai dia dan selalu antusias dengan apapun yang dia posting.
+Acell adalah pacarnya Haikal Mabrur yang suka memposting kesehariannya. Dia muda, ekspresif, dan unik. Dia suka membaca manhwa, kecil, imut, memakai kacamata bolong, dan kadang galak. Postingannya berupa momen sehari-hari, voice note random, foto selfie, stiker, atau pikiran tiba-tiba yang muncul di kepalanya. Followers-nya sangat menyukainya dan selalu bereaksi secara natural terhadap apapun yang ia bagikan.
 
 TUGASMU:
-Analisis setiap postingan baru di salurannya — baik berupa teks, foto, video, voice note, maupun stiker. Lalu tentukan untuk setiap akun bot:
-1. Apakah akun ini harus react pada postingan ini? (berdasarkan kepribadian + probabilitas react-nya)
-2. Emoji apa yang paling cocok untuk dia pakai?
-3. Berapa detik delay sebelum dia mengirim reaction? (buat variatif, jangan serentak)
+Analisis postingan baru dari Acell dengan mempertimbangkan riwayat obrolan dalam 24 jam terakhir serta jeda waktu (silence duration) sejak postingan sebelumnya. Buatlah rencana reaksi emoji secara global.
+1. Tentukan emosi keseluruhan postingan (mood).
+2. Tentukan daftar emoji reaction anonim yang akan dikirimkan oleh para bot. Jumlah reaksi yang direncanakan harus berkisar antara 70% hingga 95% dari jumlah bot aktif (misalnya jika ada 6 bot aktif, rencanakan sekitar 4 hingga 6 reaksi; jika postingan sangat membosankan atau tidak memerlukan reaksi, Anda boleh merencanakan lebih sedikit).
+3. Berikan delay waktu (5 hingga 180 detik) secara acak dan variatif untuk masing-masing reaksi agar terlihat seperti manusia asli yang membuka notifikasi di waktu berbeda.
 
-ATURAN PENTING:
-- Kamu BEBAS memilih emoji apapun yang valid di WhatsApp — tidak ada batasan, gunakan kreativitasmu.
-- HINDARI REAKSI GAYA AI YANG KAKU: Jangan gunakan emoji berlebihan seperti princess (👸), bintang berkilau (✨), bintang bersinar (🌟), atau hati pink bersinar (💖) secara acak, terutama untuk postingan kasual, stiker biasa, atau postingan sedih/frustrasi karena terasa palsu/tidak manusiawi.
-  * DETEKSI & KESESUAIAN EMOSI (SANGAT KRUSIAL):
-  * Jika Acell memposting hal yang sedih, mengeluh, frustrasi, menangis, mengirim foto mata close-up/sedih, stiker nangis (seperti Snoopy nangis), atau kata-kata keluhan/makian frustrasi (seperti "siball", "sibal", "anjing", "tai", "capek", "sedih"):
-    1. JANGAN PERNAH gunakan emoji tertawa/mengejek seperti 😂, 😹, atau emoji senang/cinta lainnya! Memberikan 😂 saat dia mengeluh/sedih adalah tindakan kasar dan tidak sopan di saluran ini!
-    2. WAJIB gunakan emoji empati/sedih/pendukung seperti: 🥹 (sedih dramatis / prihatin / terharu), 🥺 (kasihan/sedih), 🫂 (pelukan), atau 💪 (semangat).
-  * Jika Acell mengekspresikan rasa KAGET, postingan yang GA JELAS/membingungkan, atau postingan dengan nuansa PUTUS ASA, menyerah, ingin mengakhiri sesuatu, atau sedih yang luar biasa ekstrim:
-    - Utamakan dan prioritaskan emoji penolakan, syok, atau pembatasan seperti: ❌, ⁉️, 🙅, ⛔, 🚫, 🙅‍♂️, atau 🙅‍♀️ untuk menggambarkan keprihatinan yang melarang keras dia bersikap putus asa.
-  * ATURAN KETAWA ("wkwk" vs Ketawa Asli):
-    1. Jika Acell menulis "wkwk" (terutama yang pendek/singkat), itu biasanya merupakan KETAWA PALSU untuk menutupi kekecewaan, rasa canggung, atau rasa sakit hatinya. Jangan dianggap sebagai postingan lucu! Rekomendasi reaksi untuk "wkwk" adalah: 🙂 (fake smile), 🤦‍♀️ (tepuk jidat), 🗿 (deadpan), atau 🥹 (sedih/prihatin/terharu).
-    2. Jika Acell tertawa dengan cara lain seperti "AHAHA", "hahaha", "LUCUU BGTT ANJIRR" (tertawa lepas/heboh), itu baru KETAWA ASLI/BENARAN LUCU. Kamu wajib mereaksikan emoji lucu/tertawa asli seperti: 😭 (ketawa ngakak) atau 😂 (ngejek/lucu).
-  * Jika Acell memposting stiker lucu, meme, lawakan, atau cerita konyol, baru gunakan emoji santai/lucu (seperti 😂, 😭 untuk ngakak, 🗿, atau 👍).
-- KONSENSUS TIPE BOT (PELOPOR VS PENGIKUT) [SANGAT PENTING]:
-  * Akun bertipe "pioneer" (Pelopor) menentukan emoji reaction-nya secara mandiri berdasarkan analisis postingan dan kepribadiannya sendiri.
-  * Akun bertipe "follower" (Pengikut) WAJIB menyelaraskan diri dan hanya boleh memilih emoji dari daftar emoji yang telah dipilih oleh akun-akun "pioneer" pada postingan tersebut. Mereka dilarang keras memunculkan emoji baru sendiri untuk menyimulasikan gerombolan yang saling setuju/ikut-ikutan (misal: jika Pioneer memilih 🥹 dan 👍, maka Follower wajib memilih antara 🥹 atau 👍, tidak boleh memilih emoji lain).
-  * Jika kebetulan tidak ada satupun akun "pioneer" yang memberikan reaksi pada postingan tersebut, barulah akun "follower" dibebaskan memilih emoji reaction secara mandiri.
-- TIDAK semua akun harus react setiap postingan. Variasikan secara natural (sekitar 70–95% akun bereaksi tergantung "keseruan" konten).
-- Delay harus sangat bervariasi (dari 5 detik sampai 3 menit) agar terlihat seperti orang sungguhan yang masing-masing membuka notifikasi di waktu berbeda.
-- Pertimbangkan jam posting: malam hari = followers lebih aktif, dini hari = lebih sepi.
-- Pertimbangkan histori postingan: apakah ini lanjutan dari sesuatu? Apakah Acell lagi dalam suasana hati tertentu?
+PANDUAN TUNING EMOSI (SANGAT REALISTIS & MANUSIAWI):
+- JANGAN MONOTON/SERAGAM: Jangan merencanakan emoji yang sama persis untuk semua bot. Gunakan variasi emoji yang saling melengkapi (misal: daripada mengirim 4x 🙅, lebih baik kirim kombinasi 2x 🙅, 1x 🤦‍♀️, 1x 🗿).
+- SADAR JEDA WAKTU (SILENCE DURATION):
+  * Jika postingan dikirim setelah jeda waktu yang cukup lama (misal > 10 menit), ini adalah pembuka topik baru (opener). Reaksi awal yang realistis adalah bingung atau ingin tahu: ? (tanda tanya), 🤨 (heran), atau 👀 (melihat).
+- EMOSI SESUAI KONTEKS TOPIK:
+  * Keluhan Bosan / Malas: Gunakan emoji lelah/mengantuk/malas seperti 🥱 (menguap), 😑 (datar), 🥺 (kasihan/manja), atau 😴 (tidur).
+  * Hujan / Cuaca: Gunakan emoji payung atau air seperti ☔ (payung hujan), 🌧️ (awan hujan), ⚡ (petir), atau 😭 (sedih/menangis lucu).
+  * Rencana Iseng / Rahasia / Diam-diam: Gunakan emoji konspirasi/rahasia seperti 👀 (mata melirik), 🤫 (menyuruh diam), atau 😏 (senyum licik).
+  * Kesedihan / Frustrasi Umum (mengeluh capek, sedih, lelah): Gunakan emoji empati/dukungan seperti 🥺 (kasihan), 🥹 (terharu/prihatin), 🫂 (pelukan), atau 💪 (semangat). JANGAN gunakan 😂 atau 😭 untuk menertawakannya saat dia frustrasi asli.
+  * Tertawa Canggung / Palsu ("wkwk" singkat): Gunakan 🙂 (senyum canggung), 🤦‍♀️ (tepuk jidat), atau 🗿 (deadpan). Jangan gunakan emoji tertawa terbahak-bahak.
+  * Tertawa Lepas Asli ("hahaha", "AHAHAHA", "LUCU BGT"): Gunakan emoji tertawa asli seperti 😭 (tertawa ngakak) atau 😂 (ngejek/lucu).
 
-KONTEKS EMOJI KHUSUS DI SALURAN INI (beberapa emoji punya makna unik di sini):
-- 😊 = ekspresi sabar / tenang
-- 🙂 = fake smile / awkward / ga tau mau ngomong apa
-- 😍 = suka banget / sangat mengagumi
-- 🤦‍♀️ = facepalm / tepuk jidat
-- 🗿 = deadpan / facepalm versi cuek
-- 😂 = ngejek / menertawakan (hanya gunakan jika Acell sedang bercanda, melawak, atau mengejek hal lain. JANGAN gunakan saat Acell sedang sedih atau mengeluh sendiri!)
-- 😹 = ngejek level tinggi (hanya gunakan jika Acell sendiri sedang mengejek orang lain dengan keras)
-- 😭 = ketawa ngakak / lucu banget (BUKAN untuk sedih)
-- 🥹 = sedih dramatis / prihatin / terharu
-- ❌ = menolak / tidak setuju / tidak mau
-- ✅ = menyetujui / mau / setuju
-- 2️⃣ = maksudnya "2 in" atau "aku juga mau / sama" / me too
-- Emoji lainnya: gunakan makna naturalnya sesuai konteks
+FEW-SHOT EXAMPLES (CONTOH FORMAT RENCANA REAKSI):
 
-OUTPUT:
-Kembalikan dalam format JSON terstruktur sesuai schema yang diminta. Jangan tambahkan teks apapun di luar JSON.`;
+- Contoh 1 (Opener tiba-tiba setelah sunyi):
+  Post: "ya allah" (jeda: 25 menit)
+  Bot aktif: 6
+  Rencana Reaksi:
+  * emoji: "?" (delay: 8s)
+  * emoji: "👀" (delay: 24s)
+  * emoji: "🤨" (delay: 45s)
+  * emoji: "🥺" (delay: 60s)
+
+- Contoh 2 (Lanjutan mengeluh bosan):
+  Post: "bosannn" (jeda: 0 menit, lanjutan dari "ya allah")
+  Bot aktif: 6
+  Rencana Reaksi:
+  * emoji: "🥱" (delay: 12s)
+  * emoji: "🥺" (delay: 28s)
+  * emoji: "🥱" (delay: 45s)
+  * emoji: "😑" (delay: 80s)
+  * emoji: "😴" (delay: 110s)
+
+- Contoh 3 (Rencana diam-diam/kabur):
+  Post: "bisaa si keluar diem diem gtu" (jeda: 0 menit)
+  Bot aktif: 6
+  Rencana Reaksi:
+  * emoji: "👀" (delay: 15s)
+  * emoji: "🤫" (delay: 35s)
+  * emoji: "😏" (delay: 65s)
+  * emoji: "❌" (delay: 90s)
+
+- Contoh 4 (Kendala cuaca hujan):
+  Post: "tqpi hujann" (jeda: 0 menit)
+  Bot aktif: 6
+  Rencana Reaksi:
+  * emoji: "☔" (delay: 10s)
+  * emoji: "😭" (delay: 22s)
+  * emoji: "🌧️" (delay: 50s)
+  * emoji: "🥺" (delay: 85s)
+
+Hindari reaksi kaku gaya AI yang menggunakan emoji berkilau (✨, 🌟) secara acak. Kembalikan output dalam format JSON sesuai schema.`;
 
 // ─── Build prompt for a new post ──────────────────────────────────────────
 
-/**
- * Build the text portion of the prompt.
- * Media (base64) will be added as inline_data by gemini.js.
- */
-export function buildUserPrompt({ post, contextPosts, accounts }) {
-  const { todayPosts, yesterdayPosts } = contextPosts;
-
+export function buildUserPrompt({ post, contextPosts, activeBotCount, silenceDurationMinutes }) {
   const formatPost = (p) => {
     const dt = new Date(p.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
     let line = `[${dt}] [${p.content_type.toUpperCase()}]`;
@@ -69,21 +76,9 @@ export function buildUserPrompt({ post, contextPosts, accounts }) {
     return line;
   };
 
-  const todayLines = todayPosts.length
-    ? todayPosts.map(formatPost).join('\n')
-    : '(belum ada postingan hari ini sebelum yang ini)';
-
-  const yesterdayLines = yesterdayPosts.length
-    ? yesterdayPosts.map(formatPost).join('\n')
-    : '(tidak ada riwayat teks kemarin)';
-
-  const accountLines = accounts
-    .filter((a) => a.enabled)
-    .map(
-      (a) =>
-        `- ID: ${a.id} | Nama: ${a.name} | Tipe: ${a.botType || 'pioneer'}\n  Kepribadian: ${a.personality}\n  Probabilitas react: ${Math.round(a.reactProbability * 100)}%\n  Delay range: ${a.minDelaySeconds}–${a.maxDelaySeconds} detik`
-    )
-    .join('\n\n');
+  const historyLines = contextPosts.length
+    ? contextPosts.map(formatPost).join('\n')
+    : '(tidak ada riwayat postingan dalam 24 jam terakhir)';
 
   const newPostTime = new Date(post.timestamp).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
   const newPostDesc = (() => {
@@ -97,33 +92,34 @@ export function buildUserPrompt({ post, contextPosts, accounts }) {
     }
   })();
 
+  const silenceText = silenceDurationMinutes === -1
+    ? 'Ini adalah postingan pertama dalam 24 jam terakhir (tidak ada postingan sebelumnya).'
+    : `${silenceDurationMinutes} menit`;
+
   return `═══════════════════════════════════
 POSTINGAN BARU DARI ACELL
 ═══════════════════════════════════
 Waktu: ${newPostTime}
 Jenis: ${post.contentType.toUpperCase()}
 Konten: ${newPostDesc}
+Jeda Waktu Sejak Postingan Terakhir: ${silenceText}
 ${post.mediaBase64 ? '(File media terlampir di bawah)' : ''}
 
 ═══════════════════════════════════
-SEMUA POSTINGAN HARI INI (sebelum yang ini):
+RIWAYAT POSTINGAN 24 JAM TERAKHIR (Urutan Terbaru ke Terlama):
 ═══════════════════════════════════
-${todayLines}
+${historyLines}
 
 ═══════════════════════════════════
-15 POSTINGAN TEKS KEMARIN:
+PARAMETER AKTIF:
 ═══════════════════════════════════
-${yesterdayLines}
-
-═══════════════════════════════════
-DAFTAR AKUN BOT & KEPRIBADIAN:
-═══════════════════════════════════
-${accountLines}
+Jumlah Bot Aktif Saat Ini: ${activeBotCount}
 
 ═══════════════════════════════════
 TUGAS:
-Tentukan untuk setiap akun di atas: apakah react, emoji apa, dan berapa detik delay-nya.
-Sesuaikan dengan kepribadian masing-masing akun dan suasana postingan ini.
+═══════════════════════════════════
+Rencanakan reaksi emoji secara global (buat rencana maksimal sebanyak ${activeBotCount} reaksi).
+Sesuaikan variasi emoji dengan jeda waktu, topik postingan baru ini, serta riwayat 24 jam di atas.
 `;
 }
 
@@ -143,29 +139,32 @@ export const REACTION_SCHEMA = {
           type: 'string',
           description: 'Konteks waktu: morning/afternoon/evening/night/late_night',
         },
+        silenceDurationMinutes: {
+          type: 'integer',
+          description: 'Jeda waktu sejak postingan terakhir dalam menit (-1 jika tidak ada)',
+        },
         contentSummary: {
           type: 'string',
           description: 'Ringkasan singkat isi postingan (1 kalimat)',
         },
-        reactingAccountsCount: {
-          type: 'integer',
-          description: 'Jumlah akun yang akan react',
-        },
       },
-      required: ['mood', 'timeContext', 'contentSummary', 'reactingAccountsCount'],
+      required: ['mood', 'timeContext', 'silenceDurationMinutes', 'contentSummary'],
     },
     reactions: {
       type: 'array',
       items: {
         type: 'object',
         properties: {
-          accountId: { type: 'string' },
-          shouldReact: { type: 'boolean' },
-          emoji: { type: 'string', description: 'Emoji Unicode yang akan dikirim sebagai reaction' },
-          delaySeconds: { type: 'integer', description: 'Delay dalam detik sebelum mengirim reaction (5-180)' },
-          reasoning: { type: 'string', description: 'Alasan singkat kenapa memilih emoji ini (opsional, untuk log)' },
+          emoji: {
+            type: 'string',
+            description: 'Emoji Unicode tunggal untuk reaction'
+          },
+          delaySeconds: {
+            type: 'integer',
+            description: 'Delay dalam detik sebelum mengirim reaction (5-180)'
+          },
         },
-        required: ['accountId', 'shouldReact', 'emoji', 'delaySeconds'],
+        required: ['emoji', 'delaySeconds'],
       },
     },
   },

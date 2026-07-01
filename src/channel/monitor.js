@@ -207,7 +207,12 @@ async function processChannelPost(sock, msg, channel) {
     return;
   }
 
-  const contextPosts = getPostContext(channel.id);
+  const contextPosts = getPostContext(channel.id, timestamp);
+
+  // Calculate silence duration since the last post (in minutes)
+  const silenceDurationMinutes = contextPosts.length > 0
+    ? Math.max(0, Math.floor((timestamp - contextPosts[0].timestamp) / 60000))
+    : -1;
 
   // Call Gemini AI
   let aiResult;
@@ -215,7 +220,8 @@ async function processChannelPost(sock, msg, channel) {
     aiResult = await analyzePost(
       { id: msgId, contentType, textContent, caption, timestamp, mediaBase64, mediaMimeType },
       contextPosts,
-      enabledAccounts
+      enabledAccounts.length,
+      silenceDurationMinutes
     );
   } catch (err) {
     logger.error({ err: err.message, msgId }, 'AI analysis failed');
@@ -223,21 +229,35 @@ async function processChannelPost(sock, msg, channel) {
     return;
   }
 
+  // Shuffle active accounts to dynamically pair them with AI-planned reactions
+  const reacting = [];
+  if (aiResult.reactions && Array.isArray(aiResult.reactions)) {
+    const shuffledAccounts = [...enabledAccounts].sort(() => Math.random() - 0.5);
+    const countToReact = Math.min(aiResult.reactions.length, shuffledAccounts.length);
+    for (let i = 0; i < countToReact; i++) {
+      reacting.push({
+        accountId: shuffledAccounts[i].id,
+        shouldReact: true,
+        emoji: aiResult.reactions[i].emoji,
+        delaySeconds: aiResult.reactions[i].delaySeconds
+      });
+    }
+  }
+
   if (io) {
     io.emit('ai:decision', {
       postId: msgId,
       analysis: aiResult.analysis,
-      reactionCount: aiResult.reactions?.filter((r) => r.shouldReact).length || 0,
+      reactionCount: reacting.length,
       timestamp: Date.now(),
     });
   }
 
   // Queue reactions — for newsletter, serverId is msg.key.server_id (small integer like "103")
-  if (reactor && aiResult.reactions?.length > 0) {
-    const reacting = aiResult.reactions.filter((r) => r.shouldReact);
+  if (reactor && reacting.length > 0) {
     const serverId = msg.key?.server_id || msg.newsletterServerId || null;
 
-    logger.info({ msgId, serverId }, 'Passing serverId to reactor');
+    logger.info({ msgId, serverId, reactingCount: reacting.length }, 'Passing serverId and mapped reactions to reactor');
     reactor.queueReactions(msgId, channel.id, msg.key, serverId, reacting);
     markPostReacted(msgId, reacting);
   }

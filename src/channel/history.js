@@ -28,8 +28,8 @@ export function recordPost({ id, channelId, timestamp, contentType, textContent,
  * Get context posts for AI prompt building.
  * Returns { todayPosts, yesterdayPosts }
  */
-export function getPostContext(channelId) {
-  return getContextPosts(channelId);
+export function getPostContext(channelId, postTimestamp) {
+  return getContextPosts(channelId, postTimestamp);
 }
 
 /**

@@ -74,29 +74,19 @@ export function getPostById(id) {
  * - All text posts from today (WIB = UTC+7)
  * - Up to 15 text posts from yesterday
  */
-export function getContextPosts(channelId) {
-  const now = Date.now();
-  const offsetMs = 7 * 60 * 60 * 1000; // UTC+7
-  const localNow = now + offsetMs;
-  const localMidnight = localNow - (localNow % 86400000);
-  const todayStart = localMidnight - offsetMs;
-  const yesterdayStart = todayStart - 86400000;
+export function getContextPosts(channelId, postTimestamp = Date.now()) {
+  const cutoff = postTimestamp - 24 * 60 * 60 * 1000;
 
-  // Filter posts for this channel
-  const chPosts = _db.posts.filter((p) => p.channel_id === channelId);
-
-  // Today's posts (descending by timestamp)
-  const todayPosts = chPosts
-    .filter((p) => p.timestamp >= todayStart && ['text', 'image', 'video', 'audio', 'sticker'].includes(p.content_type))
-    .sort((a, b) => b.timestamp - a.timestamp);
-
-  // Yesterday's text posts (limit 20, descending)
-  const yesterdayPosts = chPosts
-    .filter((p) => p.timestamp >= yesterdayStart && p.timestamp < todayStart && p.content_type === 'text')
-    .sort((a, b) => b.timestamp - a.timestamp)
-    .slice(0, 20);
-
-  return { todayPosts, yesterdayPosts };
+  // Filter posts for this channel in the last 24 hours
+  return _db.posts
+    .filter(
+      (p) =>
+        p.channel_id === channelId &&
+        p.timestamp >= cutoff &&
+        p.timestamp < postTimestamp &&
+        ['text', 'image', 'video', 'audio', 'sticker'].includes(p.content_type)
+    )
+    .sort((a, b) => b.timestamp - a.timestamp); // newest first
 }
 
 export function markReactionSent(postId, reactionsArray) {
