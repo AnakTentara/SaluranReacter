@@ -28,7 +28,16 @@ export function loadConfig() {
         parsed.geminiApiKeys = [parsed.geminiApiKey.trim()];
       }
       
+      // Clean up legacy fields (botType, personality) from accounts
+      if (Array.isArray(parsed.accounts)) {
+        parsed.accounts = parsed.accounts.map(acc => {
+          const { botType, personality, ...rest } = acc;
+          return rest;
+        });
+      }
+      
       _config = { ...DEFAULT_CONFIG, ...parsed };
+      saveConfig();
     } else {
       _config = { ...DEFAULT_CONFIG };
       saveConfig();
@@ -76,8 +85,6 @@ export function addAccount(account) {
     id: account.id,
     name: account.name || account.id,
     enabled: account.enabled !== false,
-    botType: account.botType || 'pioneer', // pioneer | follower
-    personality: account.personality || 'Followers biasa yang suka konten saluran ini.',
     reactProbability: account.reactProbability ?? 0.7,
     minDelaySeconds: account.minDelaySeconds ?? 10,
     maxDelaySeconds: account.maxDelaySeconds ?? 120,

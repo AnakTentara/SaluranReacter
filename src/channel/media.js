@@ -129,8 +129,13 @@ export async function downloadAndEncodeMedia(msg, contentType, sock) {
       mediaType = 'document';
     }
 
+    const normalizedMsg = {
+      ...msg,
+      message: m
+    };
+
     const buffer = await downloadMediaMessage(
-      msg,
+      normalizedMsg,
       mediaType,
       {},
       { 

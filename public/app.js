@@ -410,22 +410,15 @@ function renderAccounts() {
 
     const status = acc.status || 'disconnected';
     const listenerBadge = acc.isListener ? '<span class="status-badge online" style="margin-left: 8px">LISTENER</span>' : '';
-    
-    // Tipe Bot Badge
-    const botType = acc.botType || 'pioneer';
-    const botTypeBadge = botType === 'pioneer' 
-      ? '<span class="status-badge online" style="background-color: rgba(59, 130, 246, 0.15); color: var(--primary); margin-left: 8px">PELOPOR</span>'
-      : '<span class="status-badge online" style="background-color: rgba(16, 185, 129, 0.15); color: var(--success); margin-left: 8px">PENGIKUT</span>';
 
     card.innerHTML = `
       <div class="card-header">
         <div class="acc-info">
           <h3>${escapeHtml(acc.name)}</h3>
-          <code>${escapeHtml(acc.id)}</code> ${botTypeBadge} ${listenerBadge}
+          <code>${escapeHtml(acc.id)}</code> ${listenerBadge}
         </div>
         <span class="status-badge ${status}">${status.toUpperCase()}</span>
       </div>
-      <div class="acc-personality">${escapeHtml(acc.personality)}</div>
       <div class="acc-stats">
         <span>React: <strong>${Math.round(acc.reactProbability * 100)}%</strong></span>
         <span>Delay: <strong>${acc.minDelaySeconds}–${acc.maxDelaySeconds}s</strong></span>
@@ -710,8 +703,6 @@ function closeAddAccountModal() {
 async function submitAddAccount() {
   const id = document.getElementById('new-acc-id').value.trim();
   const name = document.getElementById('new-acc-name').value.trim();
-  const botType = document.getElementById('new-acc-type').value;
-  const personality = document.getElementById('new-acc-personality').value.trim();
   const reactProbability = parseFloat(document.getElementById('new-acc-prob').value);
   const minDelaySeconds = parseInt(document.getElementById('new-acc-min-delay').value);
   const maxDelaySeconds = parseInt(document.getElementById('new-acc-max-delay').value);
@@ -729,13 +720,13 @@ async function submitAddAccount() {
     const res = await fetch('/api/accounts', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id, name, botType, personality, reactProbability, minDelaySeconds, maxDelaySeconds }),
+      body: JSON.stringify({ id, name, reactProbability, minDelaySeconds, maxDelaySeconds }),
     });
     const result = await res.json();
     if (result.ok) {
       closeAddAccountModal();
       await refreshAll();
-      appendLog('success', `Bot "${name}" (${botType}) berhasil ditambahkan`);
+      appendLog('success', `Bot "${name}" berhasil ditambahkan`);
       openQrModal(id);
     } else {
       errEl.textContent = result.error;
@@ -768,8 +759,6 @@ window.openEditAccountModal = function (id) {
 
   document.getElementById('edit-acc-id').value = acc.id;
   document.getElementById('edit-acc-name').value = acc.name;
-  document.getElementById('edit-acc-type').value = acc.botType || 'pioneer';
-  document.getElementById('edit-acc-personality').value = acc.personality;
   document.getElementById('edit-acc-prob').value = acc.reactProbability;
   document.getElementById('edit-acc-min-delay').value = acc.minDelaySeconds;
   document.getElementById('edit-acc-max-delay').value = acc.maxDelaySeconds;
@@ -785,8 +774,6 @@ function closeEditAccountModal() {
 async function submitEditAccount() {
   const id = document.getElementById('edit-acc-id').value;
   const name = document.getElementById('edit-acc-name').value.trim();
-  const botType = document.getElementById('edit-acc-type').value;
-  const personality = document.getElementById('edit-acc-personality').value.trim();
   const reactProbability = parseFloat(document.getElementById('edit-acc-prob').value);
   const minDelaySeconds = parseInt(document.getElementById('edit-acc-min-delay').value);
   const maxDelaySeconds = parseInt(document.getElementById('edit-acc-max-delay').value);
@@ -798,7 +785,7 @@ async function submitEditAccount() {
     const res = await fetch(`/api/accounts/${id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, botType, personality, reactProbability, minDelaySeconds, maxDelaySeconds }),
+      body: JSON.stringify({ name, reactProbability, minDelaySeconds, maxDelaySeconds }),
     });
     const result = await res.json();
     if (result.ok) {
